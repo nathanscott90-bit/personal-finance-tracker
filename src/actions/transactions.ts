@@ -3,6 +3,8 @@ import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { categoryLabel, txnLabel } from "@/lib/audit/describe";
+import { audit } from "@/lib/audit/request";
 import { ensureDefaultCategories } from "@/lib/categories/ensure";
 import { PARENT_COLORS } from "@/lib/categories/palette";
 import { type Db, getDb } from "@/lib/db/client";
@@ -181,6 +183,10 @@ export async function setTransactionCategory(
     .run();
   if (res.changes === 0)
     return { ok: false, error: "That transaction no longer exists." };
+  await audit(
+    "Categorised",
+    `${txnLabel(db, parsed.data.id)} → ${categoryLabel(db, parsed.data.categoryId)}`,
+  );
   refreshRecurring(db);
   revalidatePath("/transactions");
   revalidatePath("/bills");
@@ -259,6 +265,10 @@ export async function applyCategoryToMerchantAction(input: {
     categoryId: parsed.data.categoryId,
     direction: directionOf(txn.amountCents),
   });
+  await audit(
+    "Categorised merchant",
+    `${txn.merchant} → ${categoryLabel(db, parsed.data.categoryId)} (${res.applied} rows, plus a rule)`,
+  );
   refreshRecurring(db);
   refreshCategoryScreens();
   return { ok: true, ...res };
@@ -278,6 +288,7 @@ export async function restoreCategoriesAction(
   if (!parsed.success) return { ok: false, error: "That undo wasn't valid." };
   const db = getDb();
   restoreCategories(db, parsed.data);
+  await audit("Undid categorising", `${parsed.data.length} rows restored`);
   refreshRecurring(db);
   refreshCategoryScreens();
   return { ok: true };

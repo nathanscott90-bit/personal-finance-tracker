@@ -39,6 +39,10 @@ export const accounts = sqliteTable("accounts", {
   createdAt: text("created_at").notNull().default(now),
   aprBps: integer("apr_bps"),
   minPaymentCents: integer("min_payment_cents"),
+  /** Whose money this is: the household's joint account, or one person's own. */
+  owner: text("owner", { enum: ["joint", "p1", "p2"] })
+    .notNull()
+    .default("joint"),
 });
 
 export const imports = sqliteTable("imports", {
@@ -282,3 +286,22 @@ export const weeklyReviews = sqliteTable("weekly_reviews", {
   completedAt: text("completed_at").notNull().default(now),
   weekStart: text("week_start").notNull(),
 });
+
+/**
+ * Who changed what. `actor` is the display name at the time (a person's name,
+ * or "This PC" for the desktop itself); `login` is the Tailscale login when
+ * the request came through Tailscale Serve. A convenience trail for the
+ * household, not a security control: see docs/HOUSEHOLD.md.
+ */
+export const auditLog = sqliteTable(
+  "audit_log",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    at: text("at").notNull().default(now),
+    actor: text("actor").notNull(),
+    login: text("login"),
+    action: text("action").notNull(),
+    summary: text("summary").notNull(),
+  },
+  (t) => [index("audit_log_at_idx").on(t.at)],
+);

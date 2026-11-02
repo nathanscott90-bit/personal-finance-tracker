@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { detectAnomalies } from "@/lib/anomalies/detect";
 import { listDismissed } from "@/lib/anomalies/store";
+import { audit } from "@/lib/audit/request";
 import { todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
 import { transactions } from "@/lib/db/schema";
@@ -88,6 +89,7 @@ export async function completeWeeklyReview(): Promise<{
   const today = todayIso();
   const { weekStart } = completeWeek(db, today);
   const streak = reviewStatus(listWeekStarts(db), today).streak;
+  await audit("Completed weekly review", `Week of ${weekStart}`);
   refresh();
   return { ok: true, weekStart, streak };
 }

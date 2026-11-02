@@ -1,187 +1,106 @@
-# Household access and the wall display
+# Household access
 
-How both of you reach the tracker from anywhere, and how a wall display (or a
-future hub dashboard) reads its glanceable numbers.
+How both of you use the app from your own phones and laptops, how it knows
+which of you made a change, how a wall display reads it, and how the data is
+kept safe if the PC dies.
 
-The shape of it: the tracker keeps running on the desktop and has no login of
-its own. A Cloudflare Tunnel publishes it on a hostname you own, and Cloudflare
-Access decides who gets in — only the Google accounts you list. Two routes
-(`/wall` and `/api/wall`) are exempt from that policy because a kiosk browser
-cannot complete a Google sign-in unattended; they are guarded by a **display
-token** instead. The build assets under `/_next/static` (content-hashed CSS,
-JS and the font, carrying no data) are exempt too so the kiosk can render.
+**The shape of it.** The app runs on the desktop PC and only listens on
+`127.0.0.1:3000`. Tailscale Serve publishes it at
+`https://<pc-name>.<tailnet>.ts.net`, reachable only by devices signed in to
+your tailnet. Serve tells the app who is asking, so changes are logged by
+name. Nothing is opened to the internet, there is no port forwarding and no
+domain to buy.
 
-Steps 2, 3 and 4 happen in your Cloudflare account and only you can do them.
-Steps 1, 5, 6, 7 and 8 are on this machine.
+`setup.cmd` does most of this. The steps below say what it does and what only
+you can do.
 
 ---
 
-## 1. The server
+## 1. The PC is the server
 
-The desktop is the server. Nothing changes about how you start it:
+- `setup.cmd` registers a **Finance server** task that starts the app at login
+  and restarts it if it stops, and sets the PC not to sleep on mains power
+  (`powercfg`). The screen can still turn off.
+- If the PC is off, neither of you can reach the app. If that becomes a
+  nuisance, the cleanest fix is a small always-on mini PC (any £150–£250
+  Intel N100 box running Windows 11 works): copy the folder across, run
+  `setup.cmd`, done. A rented cloud server would also work but puts the data
+  on someone else's hardware, which this app is designed to avoid.
 
-```
-npm run app
-```
+## 2. Tailscale
 
-`next start` binds `0.0.0.0`, so the app answers on `http://localhost:3000` and
-on `http://<desktop-name>:3000` from the home network. **Closing the launcher
-terminal stops the server** — leave the window open (minimised is fine).
+1. On the PC: setup installs Tailscale. Sign in when it opens, then run
+   `setup.cmd` again so it can finish (it needs your tailnet's name).
+2. In the Tailscale admin console (login.tailscale.com):
+   - **DNS**: turn on **MagicDNS** and **HTTPS Certificates** (Serve needs
+     both).
+   - **Users → Invite users**: invite your partner by email. They sign in
+     with their own account, which is what lets the app tell you apart. The
+     free Personal plan covers this.
+3. On each phone or laptop: install Tailscale, sign in, open the address in
+   `PHONE-LINK.txt`, and add it to the home screen.
 
-So the tunnel is never talking to a sleeping machine, set Windows to keep the
-desktop awake:
+Setup runs `tailscale serve --bg --https=443 http://127.0.0.1:3000` and writes
+the address to `.env.local` as `FINANCE_PUBLIC_HOST`. The app uses it for
+links and to accept forms posted from that address.
 
-- Settings → System → Power & battery → Screen and sleep → **Sleep: Never**
-  (the screen may still turn off).
-- Control Panel → Power Options → Change plan settings → Change advanced power
-  settings → Sleep → **Allow hybrid sleep: Off**, **Hibernate after: Never**.
-- Device Manager → Network adapters → your adapter → Power Management →
-  uncheck **Allow the computer to turn off this device to save power**.
+Check it: from a phone with Tailscale **off**, the address should not load.
+With it on, it should, and the sidebar should say "Using as <your name>" once
+step 3 is done.
 
-Running the launcher as a scheduled task at logon (so it survives a reboot
-without you clicking anything) is a later step; today you start it by hand.
+## 3. People, owners and the activity log
 
-## 2. A domain
+**Settings → People**: name the two of you. From each person's own device,
+press **That's me** so their Tailscale login is matched to their name.
 
-Cloudflare needs a domain in your account to attach a hostname to. Any domain
-works — a cheap one is fine. Add it to Cloudflare DNS (Add a site → follow the
-nameserver instructions at your registrar), then turn on **Zero Trust** from
-the dashboard sidebar. The **Free** plan covers up to 50 users; you need two.
+**Accounts**: mark each account **Joint**, or as one person's own.
+Transactions and Insights then get a **whose money** filter: everyone, joint,
+one person, or one person plus joint.
 
-Everywhere below, `finance.<domain>` means the hostname you pick, e.g.
-`finance.example.com`.
+**Settings → Recent activity** lists changes made in the app and who made
+them. "This PC" means the desktop's own browser.
 
-## 3. The tunnel
+What it is and is not: the names come from Tailscale Serve's
+`Tailscale-User-Login` header. Because the app listens only on loopback,
+another device cannot fake that header. A program running on the PC itself
+could, so treat the log as a household convenience, not a security control.
+Both of you can see and change everything; there are no per-person
+permissions.
 
-A tunnel is an outbound-only connection from the desktop to Cloudflare. No
-router changes, no port forwarding, no inbound firewall rule.
+## 4. Wall display (optional)
 
-1. Zero Trust → **Networks** → **Tunnels** → **Create a tunnel** → select
-   **Cloudflared** → name it (e.g. `desktop`) → **Save tunnel**.
-2. Choose **Windows / 64-bit**. The dashboard prints an install command with
-   your tunnel token baked in. Run it in an **Administrator** PowerShell — it
-   installs `cloudflared` as a Windows service that starts at boot:
+A kiosk browser cannot sign in to anything, so `/wall` and `/api/wall` are
+guarded by a **display token** instead.
 
-   ```
-   cloudflared.exe service install <the long token the dashboard shows>
-   ```
+1. The display device needs Tailscale too (a spare tablet or a Raspberry Pi
+   signed in to your tailnet; a tagged device is fine).
+2. **Settings → Wall display → Generate token**. The token and an enrollment
+   link are shown **once**. If the link says `localhost`, swap that part for
+   your `https://<pc>.<tailnet>.ts.net` address and keep `?token=…` as is.
+3. Open the link once in the display's browser. It sets a long-lived,
+   httpOnly cookie and lands on `/wall`, which refreshes every 5 minutes.
+4. Clear the kiosk browser's history afterwards (the link contains the
+   token), or rotate the token if the link was shared.
 
-   (Cloudflare's snippet also includes the `winget`/MSI download step; take the
-   whole thing as printed. The token is a secret — do not paste it anywhere
-   else.)
-3. Back in the dashboard, wait for the connector to report **Healthy**, then
-   **Next**.
-4. On **Route tunnel** → **Public Hostname**, add:
-   - **Subdomain**: `finance`
-   - **Domain**: your domain
-   - **Path**: leave empty
-   - **Type**: `HTTP`, **URL**: `localhost:3000`
+**Rotate** issues a new token and cuts off every enrolled display and the
+hub; re-enrol them. **Revoke** cuts them off with no replacement.
 
-   Save. `https://finance.<domain>` now reaches the app — and, until step 4 is
-   done, so does everyone else on the internet. Do step 4 now.
+## 5. The hub contract
 
-## 4. Access policies (two applications)
-
-First add a login method: in the Cloudflare One dashboard, **Integrations →
-Identity providers → Add → One-time PIN** (no configuration; it emails a code
-to any address a policy allows). Google can be added there later if you want
-tap-to-sign-in; it needs a Google OAuth client id and secret. While you are in
-**Settings**, rename the random team name — it becomes the login page address,
-`<team>.cloudflareaccess.com`.
-
-Then **Access controls → Applications**. You create **two** self-hosted
-applications: one that locks the whole site to your two accounts, and a
-narrower one that lets the display routes through. (Older dashboards call these
-menus Access → Applications and Settings → Authentication.)
-
-**(a) The tracker — allow the two of you**
-
-- **Add an application** → **Self-hosted**.
-- Name: `Finance`. Session duration: **1 month**.
-- Public hostname: subdomain `finance`, domain your domain, **path empty**.
-- Authentication: identity provider **One-time PIN** (or Google); leave
-  "instant authentication" on so a single method skips the chooser.
-- Policy: name `Household`, action **Allow**, rule **Include** → selector
-  **Emails** → both addresses, lowercase, exactly as the mail provider shows
-  them.
-- Save.
-
-**(b) The display routes — bypass**
-
-- **Add an application** → **Self-hosted**.
-- Name: `Finance wall`.
-- Public hostname 1: subdomain `finance`, domain your domain, **path**: `wall`.
-- **Add a public hostname** (same application) 2: subdomain `finance`, domain
-  your domain, **path**: `api/wall`.
-- **Add a public hostname** 3: subdomain `finance`, domain your domain,
-  **path**: `_next/static` — the wall's stylesheet, JavaScript chunks and font
-  are served from there, and a kiosk with no Access session would get the Google
-  sign-in for each one instead (unstyled page, no hydration, so the 5-minute
-  refresh never runs). They are content-hashed build assets and carry no data.
-  Optionally add a fourth for `favicon.ico`.
-  Cloudflare matches the path *and everything under it*, so `wall` also covers
-  `wall/enroll` and `_next/static` covers every chunk beneath it.
-- Policy: name `Display token`, action **Bypass**, rule **Include** → selector
-  **Everyone**.
-- Save.
-
-Cloudflare evaluates the more specific application first, so `/wall`,
-`/api/wall` and `/_next/static` skip the sign-in prompt while every other path
-still requires it. The first two are protected by the display token from
-step 5 instead; the build assets need no protection.
-
-**Check it**: open `https://finance.<domain>` in a private window — you should
-get Cloudflare's sign-in page. Open `https://finance.<domain>/wall` — you
-should get the app's own "This display is not enrolled" page, *not* a sign-in.
-Once the display is enrolled the wall should look fully styled and keep
-refreshing itself; if it renders as plain unstyled text, the `_next/static`
-path is missing from the bypass application.
-
-**The trade-off**: traffic is decrypted at Cloudflare's edge. That is inherent
-to a tunnel with Access in front of it. The alternative (a VPN such as
-Tailscale) is out of scope here.
-
-## 5. The display
-
-1. In the app: **Settings → Household** → **Generate token**. The token and an
-   enrollment link are shown **once**. Copy the enrollment link.
-2. On the display device, open that link in the browser you will leave running.
-   It sets a long-lived `wall_device` cookie (400 days, httpOnly) and lands on
-   `/wall`.
-3. Leave the browser on `https://finance.<domain>/wall`, full screen / kiosk
-   mode. The page refreshes itself every 5 minutes.
-
-The link shown in Settings uses whatever address you opened Settings on — on
-the desktop that is `http://localhost:3000/wall/enroll?token=…`. For a display
-somewhere else in the house, swap the host for `finance.<domain>` (or the
-desktop's LAN name) and keep the `?token=…` part exactly as it is.
-
-The enrollment URL contains the token itself, so it stays in the display
-browser's history until you clear it and may appear in Cloudflare's request
-logs. After enrolling, clear the kiosk browser's history (or give the kiosk a
-dedicated browser profile), and rotate the token in **Settings → Household** if
-the link was ever shared.
-
-**Rotate** issues a new token and invalidates every enrolled display and the
-hub; re-enroll them with the new link. **Revoke** invalidates them with no
-replacement.
-
-## 6. The hub
-
-A separate dashboard project reads one endpoint, server-side:
+A separate dashboard can read one endpoint, server-side, from a machine on
+your tailnet:
 
 ```
-GET https://finance.<domain>/api/wall
+GET https://<pc>.<tailnet>.ts.net/api/wall
 Authorization: Bearer <the display token>
 ```
 
 - `200` with the JSON below, `Cache-Control: no-store`.
-- `401` `{ "ok": false, "error": "Not enrolled." }` when the token is missing or
-  wrong.
+- `401` `{ "ok": false, "error": "Not enrolled." }` when the token is missing
+  or wrong.
 - Poll every **60–300 seconds**. There is no push and no CORS header: call it
   from the hub's server, not from its browser code.
-- Keep the token in the hub's secret store. Rotating in Settings → Household
-  breaks the hub until you update it there.
+- Keep the token in the hub's secret store.
 
 The payload (the `WallSummary` type in `src/lib/wall/types.ts`; integer cents,
 dates `YYYY-MM-DD`):
@@ -226,48 +145,43 @@ Home, Budget, Bills and weekly review screens use, so the wall can never
 disagree with the app. No transactions, balances or account names are exposed;
 bill `name`s are merchant names.
 
-## 7. Backups
+## 6. Backups
 
-Nightly, on the desktop:
+Two layers, both automatic once set up:
 
-1. Open **Task Scheduler** → **Create Task**.
-   - General: name `Finance backup`, **Run whether user is logged on or not**
-     off (simplest), **Run with highest privileges** not needed.
-   - Triggers: **Daily**, e.g. 02:30.
-   - Actions: **Start a program**
-     - Program: `powershell.exe`
-     - Arguments:
-       `-NoProfile -WindowStyle Hidden -Command "cd 'C:\Users\<you>\Projects\Personal Finance Tracker'; npm run backup"`
-   - Conditions: uncheck **Start the task only if the computer is on AC power**
-     if this is a laptop.
-2. Add a second action (or a second task) that mirrors the backup folder into a
-   cloud-synced folder:
+1. **Local snapshots.** Every import copies the database to `data\backups\`
+   first (newest 20 kept). `npm run backup` makes one by hand. These protect
+   against a bad import, not against losing the PC.
+2. **Off-PC, encrypted.** **Settings → Off-PC backup**: choose a folder your
+   cloud drive syncs (OneDrive, Google Drive, Dropbox) or a USB disk, and a
+   passphrase of 12+ characters. The daily job (07:30) then writes an
+   encrypted `.finbak` there at most once a day and keeps the newest N.
+   **Back up now** runs one immediately. The cloud provider only ever holds
+   ciphertext (AES-256-GCM, key from the passphrase via scrypt).
 
-   ```
-   robocopy data\backups "<your OneDrive/Dropbox folder>\finance-backups" /MIR
-   ```
+   **Store the passphrase in a password manager both of you can reach.**
+   Without it the backups cannot be opened, by you or anyone.
+
+**Restoring on a new PC:** copy the Finance folder, run `setup.cmd`, then
+
+```
+npm run restore -- "C:\path\to\finance-20261101-073000.finbak"
+```
+
+That writes `data\restored-<time>.db` for you to inspect. To use it, stop the
+app (end the **Finance server** task in Task Scheduler) and run the same
+command with `--replace`: it saves the current database to `data\backups\`
+first, then swaps the restored one in. The passphrase can also come from
+`FINANCE_BACKUP_PASSPHRASE`.
 
 **Never put `data\finance.db` itself in a synced folder.** SQLite keeps
-`-wal` and `-shm` sidecar files open while the app runs; a sync client copying
-them mid-write produces a corrupt database. Sync the backup *copies* only.
+`-wal` and `-shm` files open while the app runs; a sync client copying them
+mid-write corrupts the database. Sync the encrypted backups only.
 
-Restoring: stop the app, replace `data\finance.db` with a backup, delete any
-leftover `data\finance.db-wal` / `-shm`, start the app.
+## 7. Without Tailscale
 
-## 8. LAN and localhost
-
-The launcher's own window and anything on the home Wi-Fi can reach
-`http://<desktop-name>:3000` directly, with **no Cloudflare and no login**.
-That is the accepted exposure of this design: whoever is on your Wi-Fi can open
-the tracker.
-
-You do not need a firewall rule for the tunnel (it is outbound only). You need
-one only if you *want* LAN access without the tunnel and Windows is blocking
-it — in an Administrator PowerShell:
-
-```
-New-NetFirewallRule -DisplayName "Finance tracker (LAN)" -Direction Inbound -Protocol TCP -LocalPort 3000 -Profile Private -Action Allow
-```
-
-`-Profile Private` keeps it to networks you have marked private. Do not open
-port 3000 on your router: the tunnel is the way in from outside.
+To serve the home network directly instead, start the app with
+`FINANCE_HOST=0.0.0.0` (launcher) or `-H 0.0.0.0` (task) and allow port 3000
+for private networks in Windows Firewall. Anyone on your Wi-Fi can then open
+the app, and the activity log shows everyone as "This PC". Never forward port
+3000 on your router.

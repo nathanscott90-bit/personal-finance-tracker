@@ -1,14 +1,18 @@
 # Finance — UK setup (Windows)
 
-Runs on your PC. Your data never leaves it, apart from read-only bank access
-through Enable Banking and the alerts sent to your phone.
+Runs on your PC, for both of you. Your data never leaves it, apart from
+read-only bank access through Enable Banking, the alerts sent to your phones,
+and encrypted backups to a folder you choose.
 
 ## 1. Install (once, ~5 minutes)
 
 1. Unzip this folder somewhere permanent, e.g. `Documents\Finance`.
 2. Double-click **setup.cmd**. It installs Node.js if needed, builds the
-   app, adds a **Finance** shortcut to the desktop and schedules a daily sync
-   at 07:30 (or as soon as the PC is next on).
+   app, adds a **Finance** shortcut to the desktop, schedules a daily sync
+   at 07:30 (or as soon as the PC is next on), keeps the PC awake on mains
+   power and installs Tailscale.
+3. Sign in to Tailscale when it opens, then run **setup.cmd** once more. It
+   needs your tailnet's name to finish phone access.
 
 ## 2. Connect your banks (once, then every few months)
 
@@ -31,13 +35,28 @@ topic shown, press **Send test**.
 Optional: if you pay NatWest by standing order, enter the amount. You'll then
 only hear from the app in months that need more.
 
-## 4. Phone view (once)
+## 4. Phones and laptops, for both of you (once)
 
-Setup installs **Tailscale** on the PC; sign in when it opens. On the phone,
-install Tailscale from the Play Store, sign in with the same account, then
-open the link in **PHONE-LINK.txt** (also shown in Settings → Phone view) and
-use Chrome's menu → **Add to Home screen**. It works from anywhere, and only
-your own signed-in devices can reach it.
+1. In the Tailscale admin console (login.tailscale.com): **DNS** → turn on
+   **MagicDNS** and **HTTPS Certificates**; **Users** → invite your partner.
+2. On each phone: install Tailscale, sign in (each with your own account),
+   open the link in **PHONE-LINK.txt**, then Chrome's menu → **Add to Home
+   screen**. Both of you subscribe to the ntfy topic for alerts.
+3. In **Settings → People**, enter both names. On each person's phone,
+   press **That's me**.
+4. In **Accounts**, mark each account **Joint** or as one person's own.
+
+## 5. Off-PC backup (once, 2 minutes)
+
+**Settings → Off-PC backup**: choose a folder inside OneDrive or Google Drive
+(e.g. `C:\Users\you\OneDrive\Finance backups`) and a passphrase. Save the
+passphrase in a password manager you both can open. A backup is then written
+every day; restore with `npm run restore -- <file>` (see docs/HOUSEHOLD.md).
+
+## 6. Claude (optional)
+
+**Settings → Claude** lets Claude Desktop on this PC answer questions about
+your money, read-only. Off until you choose. See docs/CLAUDE-CONNECTOR.md.
 
 ## What you'll get
 
@@ -73,6 +92,6 @@ Download CSVs from NatWest and Nationwide online banking and drop them on the
 
 ## Where things are
 
-- Data: `data\finance.db` (back it up from Settings → Data).
+- Data: `data\finance.db`. Encrypted copies go to your Off-PC backup folder.
 - Daily job log: `data\daily.log`.
 - Run the daily job by hand: `npm run daily` in this folder.

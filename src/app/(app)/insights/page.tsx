@@ -1,3 +1,4 @@
+import { getPeopleAction } from "@/actions/household";
 import { getInsights } from "@/actions/insights";
 import { AmountText } from "@/components/finance/AmountText";
 import { AvgWindowPicker } from "@/components/finance/AvgWindowPicker";
@@ -6,8 +7,10 @@ import { DeltaCaption } from "@/components/finance/DeltaCaption";
 import { InsightsCategoryPanel } from "@/components/finance/InsightsCategoryPanel";
 import { MonthPicker } from "@/components/finance/MonthPicker";
 import { TopMerchants } from "@/components/finance/TopMerchants";
+import { WhoPicker } from "@/components/finance/WhoPicker";
 import { Card } from "@/components/ui/card";
 import { PARENT_COLORS } from "@/lib/categories/palette";
+import { parseWho } from "@/lib/household/people";
 import { formatCents } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
@@ -15,10 +18,15 @@ export const dynamic = "force-dynamic";
 export default async function InsightsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; avg?: string }>;
+  searchParams: Promise<{ month?: string; avg?: string; who?: string }>;
 }) {
-  const { month, avg } = await searchParams;
-  const p = await getInsights(month, avg);
+  const { month, avg, who: whoParam } = await searchParams;
+  const who = parseWho(whoParam);
+  const [p, household] = await Promise.all([
+    getInsights(month, avg, who),
+    getPeopleAction(),
+  ]);
+  const whoParams: Record<string, string> = who === "everyone" ? {} : { who };
   const strip =
     p.totals.fixed + p.totals.variable + Math.max(p.totals.savings, 0);
   return (
@@ -26,16 +34,20 @@ export default async function InsightsPage({
       <div className="mb-6 flex items-end justify-between">
         <h1 className="text-title font-semibold">Insights</h1>
         <div className="flex items-center gap-4">
+          <WhoPicker
+            people={{ p1: household.p1.name, p2: household.p2.name }}
+          />
           <AvgWindowPicker
             month={p.month}
             avgMonths={p.avgMonths}
             basePath="/insights"
+            extraParams={whoParams}
           />
           <MonthPicker
             month={p.month}
             months={p.months}
             basePath="/insights"
-            extraParams={{ avg: String(p.avgMonths) }}
+            extraParams={{ avg: String(p.avgMonths), ...whoParams }}
           />
         </div>
       </div>

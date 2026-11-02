@@ -1,7 +1,13 @@
-import { hostname } from "node:os";
 import { listAccounts } from "@/actions/accounts";
+import { getOffsiteAction } from "@/actions/backup";
+import { getClaudeAction } from "@/actions/claude";
 import { getBankConnection } from "@/actions/enablebanking";
-import { getHouseholdAction } from "@/actions/household";
+import {
+  getHouseholdAction,
+  getPeopleAction,
+  listActivityAction,
+  whoAmIAction,
+} from "@/actions/household";
 import { getNotifySettings } from "@/actions/notify";
 import { getPaydayAction, getSettingsPage } from "@/actions/settings";
 import { getConnectionAction } from "@/actions/simplefin";
@@ -9,7 +15,11 @@ import { BankConnectionCard } from "@/components/finance/bank/BankConnectionCard
 import { NotifyCard } from "@/components/finance/bank/NotifyCard";
 import { PaydayForm } from "@/components/finance/budget/PaydayForm";
 import { CategoryManager } from "@/components/finance/CategoryManager";
+import { ActivityCard } from "@/components/finance/household/ActivityCard";
+import { ClaudeCard } from "@/components/finance/household/ClaudeCard";
 import { HouseholdCard } from "@/components/finance/household/HouseholdCard";
+import { OffsiteBackupCard } from "@/components/finance/household/OffsiteBackupCard";
+import { PeopleCard } from "@/components/finance/household/PeopleCard";
 import { PhoneAccessCard } from "@/components/finance/phone/PhoneAccessCard";
 import { RerunButton } from "@/components/finance/RerunButton";
 import { ConnectionsCard } from "@/components/finance/simplefin/ConnectionsCard";
@@ -38,6 +48,13 @@ export default async function SettingsPage() {
   }));
   const bank = await getBankConnection();
   const notify = await getNotifySettings();
+  const [people, you, activity, offsite, claude] = await Promise.all([
+    getPeopleAction(),
+    whoAmIAction(),
+    listActivityAction(40),
+    getOffsiteAction(),
+    getClaudeAction(),
+  ]);
   const now = new Date();
   const isUs = /^en-US$/i.test(LOCALE);
   return (
@@ -63,7 +80,10 @@ export default async function SettingsPage() {
           reminderDays={notify.reminderDays}
           enabled={notify.enabled}
         />
-        <PhoneAccessCard hostname={hostname()} />
+        <PhoneAccessCard
+          publicHost={process.env.FINANCE_PUBLIC_HOST?.trim() || null}
+        />
+        <PeopleCard people={people} you={you} />
         <HouseholdCard
           tokenSet={household.tokenSet}
           createdAtLabel={
@@ -118,6 +138,14 @@ export default async function SettingsPage() {
             Download a backup
           </a>
         </Card>
+        <OffsiteBackupCard
+          view={offsite}
+          lastLabel={
+            offsite.last?.ok ? relativeSince(offsite.last.at, now) : null
+          }
+        />
+        <ClaudeCard view={claude} />
+        <ActivityCard entries={activity} />
         <div>
           <h2 className="mb-4 text-headline font-semibold">Categories</h2>
           <CategoryManager tree={tree} />

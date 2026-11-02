@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listAccounts } from "@/actions/accounts";
+import { getPeopleAction } from "@/actions/household";
 import {
   findCategoryGroupOption,
   listCategoryGroupOptions,
@@ -11,6 +12,7 @@ import { TransactionFilters } from "@/components/finance/TransactionFilters";
 import { TransactionsTable } from "@/components/finance/TransactionsTable";
 import { buttonVariants } from "@/components/ui/button";
 import { isIsoDate } from "@/lib/dates";
+import { parseWho } from "@/lib/household/people";
 import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 import { parseIdParam } from "@/lib/sqlLike";
@@ -28,6 +30,7 @@ function exportQuery(filter: TxnFilter): string {
   if (filter.from !== undefined) params.set("from", filter.from);
   if (filter.to !== undefined) params.set("to", filter.to);
   if (filter.q !== undefined) params.set("q", filter.q);
+  if (filter.who && filter.who !== "everyone") params.set("who", filter.who);
   return params.toString();
 }
 
@@ -49,18 +52,27 @@ export default async function TransactionsPage({
     from: isoOrUndefined(sp.from),
     to: isoOrUndefined(sp.to),
     q: sp.q,
+    who: parseWho(sp.who),
   };
-  const [rows, summary, accounts, categories, activeGroups, currentGroup] =
-    await Promise.all([
-      listTransactions(filter),
-      summarizeTransactions(filter),
-      listAccounts(),
-      listCategoryOptions(),
-      listCategoryGroupOptions(),
-      filter.parentId === undefined
-        ? undefined
-        : findCategoryGroupOption(filter.parentId),
-    ]);
+  const [
+    rows,
+    summary,
+    accounts,
+    categories,
+    activeGroups,
+    currentGroup,
+    household,
+  ] = await Promise.all([
+    listTransactions(filter),
+    summarizeTransactions(filter),
+    listAccounts(),
+    listCategoryOptions(),
+    listCategoryGroupOptions(),
+    filter.parentId === undefined
+      ? undefined
+      : findCategoryGroupOption(filter.parentId),
+    getPeopleAction(),
+  ]);
   // Groups with at least one active leaf. The group currently filtered on is
   // kept even when it has none (or is archived), so the select still shows it
   // rather than falling back to "All categories".
@@ -107,6 +119,7 @@ export default async function TransactionsPage({
           parentId: c.parentId,
         }))}
         groups={groups}
+        people={{ p1: household.p1.name, p2: household.p2.name }}
       />
       <TransactionsTable rows={rows} categories={categories} />
     </>

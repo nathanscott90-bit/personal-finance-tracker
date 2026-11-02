@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OWNERS } from "@/lib/household/people";
 
 export const accountInput = z.object({
   name: z.string().min(1).max(60),
@@ -15,6 +16,7 @@ export const accountInput = z.object({
     .default("#0A84FF"),
   aprBps: z.number().int().min(0).max(10000).nullable().optional(),
   minPaymentCents: z.number().int().min(0).nullable().optional(),
+  owner: z.enum(OWNERS).default("joint"),
 });
 
 export const accountIdSchema = z.number().int().positive();

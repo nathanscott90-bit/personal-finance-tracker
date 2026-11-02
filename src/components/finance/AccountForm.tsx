@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ACCOUNT_COLORS } from "@/lib/categories/palette";
+import type { Owner } from "@/lib/household/people";
 
 const TYPES = [
   "checking",
@@ -25,16 +26,20 @@ const EMPTY: AccountInput = {
   type: "checking",
   institution: "",
   color: COLORS[0],
+  owner: "joint",
 };
 
 export function AccountForm({
   initial,
   id,
+  people,
   onDone,
   onCancel,
 }: {
   initial?: AccountInput;
   id?: number;
+  /** Household names, for the "Whose" choice. */
+  people: { p1: string; p2: string };
   onDone?: () => void;
   onCancel?: () => void;
 }) {
@@ -71,7 +76,7 @@ export function AccountForm({
           id={`${uid}-name`}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          placeholder="Chase Checking"
+          placeholder="NatWest Current"
           maxLength={60}
           required
         />
@@ -92,6 +97,18 @@ export function AccountForm({
           ))}
         </select>
       </label>
+      <label className="grid gap-1 text-caption text-ink-2">
+        Whose
+        <select
+          className="h-9 rounded-control border border-line bg-card px-3 text-body"
+          value={form.owner ?? "joint"}
+          onChange={(e) => setForm({ ...form, owner: e.target.value as Owner })}
+        >
+          <option value="joint">Joint</option>
+          <option value="p1">{people.p1}</option>
+          <option value="p2">{people.p2}</option>
+        </select>
+      </label>
       <label
         className="grid gap-1 text-caption text-ink-2"
         htmlFor={`${uid}-institution`}
@@ -101,7 +118,7 @@ export function AccountForm({
           id={`${uid}-institution`}
           value={form.institution ?? ""}
           onChange={(e) => setForm({ ...form, institution: e.target.value })}
-          placeholder="Chase"
+          placeholder="NatWest"
           maxLength={60}
         />
       </label>

@@ -1,6 +1,8 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { accountLabel } from "@/lib/audit/describe";
+import { audit } from "@/lib/audit/request";
 import { monthOf, todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
 import { comparePlans } from "@/lib/debt/simulate";
@@ -11,6 +13,7 @@ import {
   setDebtTerms,
 } from "@/lib/debt/store";
 import type { DebtInput, DebtPage, Strategy } from "@/lib/debt/types";
+import { formatCents } from "@/lib/money";
 
 type Fail = { ok: false; error: string };
 
@@ -89,6 +92,10 @@ export async function setDebtTermsAction(input: {
   const db = getDb();
   const result = setDebtTerms(db, accountId, aprBps, minPaymentCents);
   if (!result.ok) return result;
+  await audit(
+    "Set debt terms",
+    `${accountLabel(db, accountId)}: ${aprPercent}% APR, min ${formatCents(minPaymentCents)}`,
+  );
   refresh();
   return { ok: true };
 }
@@ -113,6 +120,7 @@ export async function setDebtExtraAction(input: {
 
   const db = getDb();
   setDebtExtra(db, p.data.cents);
+  await audit("Set extra debt payment", formatCents(p.data.cents));
   refresh();
   return { ok: true };
 }

@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { audit } from "@/lib/audit/request";
 import { getDb } from "@/lib/db/client";
 import { getNotifyConfig, ntfySend, setNotifyConfig } from "@/lib/notify/send";
 
@@ -23,6 +24,7 @@ export async function saveNotifySettingsAction(input: {
   if (!p.success) return { ok: false as const, error: "Check the amounts." };
   const db = getDb();
   setNotifyConfig(db, { ...getNotifyConfig(db), ...p.data });
+  await audit("Changed phone alerts", p.data.enabled ? "On" : "Off");
   revalidatePath("/settings");
   return { ok: true as const };
 }

@@ -23,6 +23,8 @@ Write-Host "Installing packages..."
 npm ci --ignore-scripts --no-audit --no-fund
 if ($LASTEXITCODE -ne 0) { throw "npm ci failed" }
 
+# A server left running from an earlier install holds the build folder open.
+try { Stop-ScheduledTask -TaskName "Finance server" -ErrorAction SilentlyContinue } catch {}
 Write-Host "Building..."
 npm run build
 if ($LASTEXITCODE -ne 0) { throw "Build failed" }
@@ -56,50 +58,97 @@ try {
   schtasks /Create /F /SC DAILY /ST 07:30 /TN "Finance daily sync" /TR "`"$daily`"" | Out-Null
 }
 
-Write-Host "Setting up phone access (Tailscale)..."
-# Tailscale links your PC and phone privately; nothing is opened to the
-# internet. Only devices signed in to your Tailscale account can reach the app.
+Write-Host "Keeping the PC awake on mains power..."
+# The app is the household's server: if the PC sleeps, nobody can reach it.
+# The screen can still switch off. Laptops on battery keep their usual sleep.
+try {
+  powercfg /change standby-timeout-ac 0 | Out-Null
+  powercfg /change hibernate-timeout-ac 0 | Out-Null
+} catch {
+  Write-Host "Could not change sleep settings; set Sleep to Never yourself." -ForegroundColor Yellow
+}
+
+Write-Host "Setting up access for phones and laptops (Tailscale)..."
+# Tailscale links your devices privately; nothing is opened to the internet.
+# Tailscale Serve gives the app an HTTPS address only your tailnet can open
+# and tells the app which of you is using it. The app itself only listens on
+# 127.0.0.1, so Serve is the only way in from another device.
 $ts = "$env:ProgramFiles\Tailscale\tailscale.exe"
 if (-not (Test-Path $ts)) {
   winget install -e --id tailscale.tailscale --accept-package-agreements --accept-source-agreements --silent
 }
-$node = (Get-Command node).Source
-$fw = @"
-Remove-NetFirewallRule -DisplayName 'Finance (Tailscale only)' -ErrorAction SilentlyContinue
-New-NetFirewallRule -DisplayName 'Finance (Tailscale only)' -Direction Inbound -Action Allow ``
-  -Program '$node' -Protocol TCP -LocalPort 3000 -RemoteAddress 100.64.0.0/10 -Profile Any | Out-Null
-"@
-try {
-  # One Windows permission prompt: the firewall rule needs administrator rights.
-  $enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($fw))
-  Start-Process powershell -Verb RunAs -Wait -ArgumentList "-NoProfile -EncodedCommand $enc"
-} catch {
-  Write-Host "Firewall rule skipped ($($_.Exception.Message)). Phone access may be blocked." -ForegroundColor Yellow
-}
+
 # Keep the app running in the background from login, so the phone link works
 # without opening anything on the PC.
 try {
   $serve = New-ScheduledTaskAction -Execute "powershell.exe" -WorkingDirectory $PSScriptRoot `
-    -Argument "-NoProfile -WindowStyle Hidden -Command `"Set-Location '$PSScriptRoot'; npm run start -- -p 3000`""
+    -Argument "-NoProfile -WindowStyle Hidden -Command `"Set-Location '$PSScriptRoot'; npm run start -- -p 3000 -H 127.0.0.1`""
   $atLogon = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
   $keep = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
     -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
   Register-ScheduledTask -TaskName "Finance server" -Action $serve -Trigger $atLogon -Settings $keep `
-    -Description "Runs the Finance app in the background for the phone view." -Force | Out-Null
-  Start-ScheduledTask -TaskName "Finance server"
+    -Description "Runs the Finance app in the background for phones and laptops." -Force | Out-Null
 } catch {
   Write-Host "Background server not scheduled ($($_.Exception.Message)); open Finance from the desktop instead." -ForegroundColor Yellow
 }
-$phone = "http://$($env:COMPUTERNAME.ToLower()):3000/m"
-Set-Content -Path "$PSScriptRoot\PHONE-LINK.txt" -Value @"
-On your phone:
-1. Install Tailscale from the Play Store and sign in with the same account as on this PC.
-2. Open $phone in Chrome, then menu > Add to Home screen.
-The PC needs to be on. Anyone not signed in to your Tailscale can't reach it.
+
+function Get-TailnetName {
+  try {
+    $st = & $ts status --json | ConvertFrom-Json
+    if ($st.BackendState -eq "Running" -and $st.Self.DNSName) { return $st.Self.DNSName.TrimEnd(".") }
+  } catch {}
+  return $null
+}
+
+$hostName = $null
+if (Test-Path $ts) { $hostName = Get-TailnetName }
+if ($hostName) {
+  # Publish http://127.0.0.1:3000 as https://<this-pc>.<tailnet>.ts.net
+  & $ts serve --bg --https=443 http://127.0.0.1:3000
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "Tailscale Serve could not start. In the Tailscale admin console, open DNS and turn on MagicDNS and HTTPS Certificates, then run setup.cmd again." -ForegroundColor Yellow
+  }
+  # Tell the app its address (for links and to accept forms posted from it).
+  $envFile = "$PSScriptRoot\.env.local"
+  $lines = @()
+  $had = $false
+  if (Test-Path $envFile) {
+    $had = [bool](Select-String -Path $envFile -Pattern "^FINANCE_PUBLIC_HOST=$([regex]::Escape($hostName))$" -Quiet)
+    $lines = @(Get-Content $envFile | Where-Object { $_ -notmatch '^FINANCE_PUBLIC_HOST=' })
+  }
+  $lines += "FINANCE_PUBLIC_HOST=$hostName"
+  Set-Content -Path $envFile -Value $lines
+  if (-not $had) {
+    # The address is baked into the build's settings, so rebuild once.
+    Write-Host "Rebuilding for $hostName..."
+    npm run build
+    if ($LASTEXITCODE -ne 0) { throw "Build failed" }
+  }
+  $base = "https://$hostName"
+  Set-Content -Path "$PSScriptRoot\PHONE-LINK.txt" -Value @"
+On each phone or laptop:
+1. Install Tailscale and sign in. Your partner signs in with their own account
+   once you have invited them (Tailscale admin console > Users > Invite).
+2. Open $base/m (phone view) or $base (full app) in Chrome,
+   then menu > Add to Home screen.
+3. In Finance > Settings > People, press "That's me" on each person's device.
+The PC needs to be on. Nobody outside your tailnet can reach it.
 "@
+} else {
+  Set-Content -Path "$PSScriptRoot\PHONE-LINK.txt" -Value @"
+Tailscale is installed but not signed in on this PC yet.
+Sign in to Tailscale (it opens now), then run setup.cmd again to finish.
+"@
+}
+try { Stop-ScheduledTask -TaskName "Finance server" -ErrorAction SilentlyContinue } catch {}
+try { Start-ScheduledTask -TaskName "Finance server" } catch {}
 
 Write-Host ""
 Write-Host "Done. Open 'Finance' from your desktop, go to Settings, and follow" -ForegroundColor Green
-Write-Host "'Bank connection' and 'Phone alerts'." -ForegroundColor Green
-Write-Host "Sign in to Tailscale when it opens, then see PHONE-LINK.txt for the phone." -ForegroundColor Green
-if (Test-Path $ts) { Start-Process $ts -ArgumentList "up" -ErrorAction SilentlyContinue }
+Write-Host "'Bank connection', 'Phone alerts', 'People' and 'Off-PC backup'." -ForegroundColor Green
+if ($hostName) {
+  Write-Host "Phones and laptops: see PHONE-LINK.txt ($base)." -ForegroundColor Green
+} else {
+  Write-Host "Sign in to Tailscale when it opens, then run setup.cmd again for phone access." -ForegroundColor Green
+  if (Test-Path $ts) { Start-Process $ts -ArgumentList "up" -ErrorAction SilentlyContinue }
+}

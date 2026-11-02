@@ -1,6 +1,8 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { categoryLabel } from "@/lib/audit/describe";
+import { audit } from "@/lib/audit/request";
 import { budgetGate } from "@/lib/budget/gate";
 import { setupDefaults } from "@/lib/budget/setup";
 import {
@@ -18,6 +20,7 @@ import { getDb } from "@/lib/db/client";
 import { goalNeededByGoalId, listGoals } from "@/lib/goals/store";
 import { completeMonths, dataMonths } from "@/lib/insights/aggregate";
 import { cachedBills, cachedBudgetPage, cachedLines } from "@/lib/loaders";
+import { formatCents } from "@/lib/money";
 import { irregularItems, spreadByLeaf } from "@/lib/spreading/items";
 import { listPlanned } from "@/lib/spreading/store";
 
@@ -96,6 +99,10 @@ export async function saveBudget(input: {
   if (!validBudgetRows(db, p.data.rows))
     return { ok: false, error: "Unknown category." };
   saveBudgetMonth(db, p.data.month, p.data.rows, p.data.incomeCents);
+  await audit(
+    "Saved budget",
+    `${p.data.month}, ${p.data.rows.length} categories`,
+  );
   refresh();
   return { ok: true };
 }
@@ -124,6 +131,10 @@ export async function setBudgetAmount(input: {
   )
     return { ok: false, error: "Unknown category." };
   setBudgetRow(db, p.data.month, p.data.categoryId, p.data.amountCents);
+  await audit(
+    "Set budget",
+    `${categoryLabel(db, p.data.categoryId)} ${p.data.month}: ${formatCents(p.data.amountCents)}`,
+  );
   refresh();
   return { ok: true };
 }
@@ -143,6 +154,10 @@ export async function setBudgetIncome(input: {
       error: p.error.issues[0]?.message ?? "Invalid amount.",
     };
   setBudgetIncomeStore(getDb(), p.data.month, p.data.cents);
+  await audit(
+    "Set budget income",
+    `${p.data.month}: ${formatCents(p.data.cents)}`,
+  );
   refresh();
   return { ok: true };
 }
@@ -156,7 +171,10 @@ export async function copyBudget(input: {
   if (!p.success)
     return { ok: false, error: p.error.issues[0]?.message ?? "Invalid month." };
   const r = copyBudgetMonth(getDb(), p.data.from, p.data.to);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Copied budget", `${p.data.from} → ${p.data.to}`);
+    refresh();
+  }
   return r;
 }
 
@@ -175,6 +193,12 @@ export async function setCategoryRollover(input: {
       error: p.error.issues[0]?.message ?? "Invalid request.",
     };
   const r = setCategoryRolloverStore(getDb(), p.data.id, p.data.rollover);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit(
+      "Changed rollover",
+      `${categoryLabel(getDb(), p.data.id)}: ${p.data.rollover ? "on" : "off"}`,
+    );
+    refresh();
+  }
   return r;
 }

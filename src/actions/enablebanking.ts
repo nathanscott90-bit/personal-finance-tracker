@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { audit } from "@/lib/audit/request";
 import { getDb } from "@/lib/db/client";
 import { listAspsps } from "@/lib/enablebanking/client";
 import { normalisePem } from "@/lib/enablebanking/jwt";
@@ -94,6 +95,7 @@ export async function saveEbConfigAction(input: {
     privateKey,
     redirectUrl: p.data.redirectUrl ?? DEFAULT_REDIRECT,
   });
+  await audit("Saved bank connection settings", "Enable Banking app details");
   refresh();
   return { ok: true as const };
 }
@@ -125,6 +127,7 @@ export async function finishConnectAction(pasted: string) {
   try {
     const r = await completeConnect(db, fetch, pasted);
     const sync = await runEbSync(db, fetch);
+    await audit("Connected bank", `${r.bank}: ${r.accounts.length} accounts`);
     refresh();
     const added = sync.results.reduce((n, x) => n + x.added, 0);
     return { ok: true as const, bank: r.bank, accounts: r.accounts, added };

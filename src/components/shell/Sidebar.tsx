@@ -45,10 +45,13 @@ export function Sidebar({
   reviewCount,
   gate,
   reviewDue,
+  actorName,
 }: {
   reviewCount: number;
   gate: Gate;
   reviewDue: boolean;
+  /** Who this request is from (a household name, or "This PC"). */
+  actorName?: string;
 }) {
   const path = usePathname();
   return (
@@ -104,6 +107,11 @@ export function Sidebar({
           </Link>
         );
       })}
+      {actorName && (
+        <div className="mt-auto px-3 pt-4 text-micro text-ink-3">
+          Using as <span className="font-medium text-ink-2">{actorName}</span>
+        </div>
+      )}
     </aside>
   );
 }

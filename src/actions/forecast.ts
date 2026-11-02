@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { audit } from "@/lib/audit/request";
 import { listBudgetLeaves } from "@/lib/budget/store";
 import { todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
@@ -21,6 +22,7 @@ import {
   monthTotals,
 } from "@/lib/insights/aggregate";
 import { cachedBills, cachedBudgetPage, cachedLines } from "@/lib/loaders";
+import { formatCents } from "@/lib/money";
 import { latestBalances } from "@/lib/networth/series";
 import { listSnapshots } from "@/lib/networth/store";
 import { irregularItems } from "@/lib/spreading/items";
@@ -164,6 +166,7 @@ export async function setForecastFloor(input: {
       error: p.error.issues[0]?.message ?? "Invalid amount.",
     };
   setFloor(getDb(), p.data.cents);
+  await audit("Set low-balance floor", formatCents(p.data.cents));
   refresh();
   return { ok: true };
 }

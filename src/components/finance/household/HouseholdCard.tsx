@@ -67,11 +67,11 @@ export function HouseholdCard({
   };
   return (
     <Card>
-      <h2 className="mb-1 text-headline font-semibold">Household</h2>
+      <h2 className="mb-1 text-headline font-semibold">Wall display</h2>
       <p className="mb-4 text-caption text-ink-2">
-        Access from outside the house is handled by Cloudflare Access; see
-        docs/HOUSEHOLD.md in the project for the setup. A wall display or your
-        own dashboard reads this app through a display token.
+        A wall display or your own dashboard reads a one-screen summary through
+        a display token, with no sign-in. The display needs Tailscale too; see
+        docs/HOUSEHOLD.md.
       </p>
       {fresh ? (
         <div className="grid gap-3">
@@ -115,8 +115,8 @@ export function HouseholdCard({
             </div>
           </div>
           <p className="text-caption text-ink-2">
-            Links use this address: {origin}. From outside the house use your
-            Cloudflare hostname instead.
+            Links use this address: {origin}. If that says localhost, swap it
+            for the Tailscale address shown under Phones and laptops.
           </p>
         </div>
       ) : (

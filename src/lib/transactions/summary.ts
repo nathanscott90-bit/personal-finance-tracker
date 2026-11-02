@@ -1,6 +1,7 @@
-import { and, eq, gte, lte, or, type SQL, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, or, type SQL, sql } from "drizzle-orm";
 import type { Db } from "@/lib/db/client";
-import { categories, transactions } from "@/lib/db/schema";
+import { accounts, categories, transactions } from "@/lib/db/schema";
+import { ownersFor, type Who } from "@/lib/household/people";
 import { escapeLike } from "@/lib/sqlLike";
 
 export type TxnFilter = {
@@ -11,6 +12,8 @@ export type TxnFilter = {
   /** Any leaf under this group (the `group` query param). */
   parentId?: number;
   q?: string;
+  /** Whose money: limits to accounts owned by these people (see `ownersFor`). */
+  who?: Who;
 };
 
 /** Rows returned by one page of the transactions list. */
@@ -30,7 +33,11 @@ export type TxnSummary = {
  */
 export function buildWhere(f: TxnFilter = {}): SQL | undefined {
   const pattern = f.q ? `%${escapeLike(f.q)}%` : undefined;
+  const owners = f.who ? ownersFor(f.who) : null;
   return and(
+    owners
+      ? sql`${transactions.accountId} IN (SELECT ${accounts.id} FROM ${accounts} WHERE ${inArray(accounts.owner, owners)})`
+      : undefined,
     f.accountId ? eq(transactions.accountId, f.accountId) : undefined,
     f.from ? gte(transactions.date, f.from) : undefined,
     f.to ? lte(transactions.date, f.to) : undefined,

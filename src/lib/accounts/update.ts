@@ -2,11 +2,12 @@ import { eq, sql } from "drizzle-orm";
 import type { AccountRecord } from "@/lib/accounts/schema";
 import type { Db } from "@/lib/db/client";
 import { accounts, balanceSnapshots } from "@/lib/db/schema";
+import type { Owner } from "@/lib/household/people";
 import { LIABILITY_TYPES } from "@/lib/networth/types";
 import type { AccountResult } from "./dependents";
 
 /**
- * Edit an account's name, type, institution and color. Debt terms belong to
+ * Edit an account's name, type, institution, color and owner. Debt terms belong to
  * the Debt page and are left alone. Snapshots store an asset's balance as is
  * and a liability's as the amount owed, so a change of kind negates them to
  * keep their meaning.
@@ -14,7 +15,7 @@ import type { AccountResult } from "./dependents";
 export function updateAccountRecord(
   db: Db,
   id: number,
-  input: AccountRecord,
+  input: Omit<AccountRecord, "owner"> & { owner?: Owner },
 ): AccountResult {
   return db.transaction((tx) => {
     const current = tx
@@ -29,6 +30,7 @@ export function updateAccountRecord(
         type: input.type,
         institution: input.institution,
         color: input.color,
+        ...(input.owner ? { owner: input.owner } : {}),
       })
       .where(eq(accounts.id, id))
       .run();

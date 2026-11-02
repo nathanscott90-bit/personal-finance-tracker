@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { audit } from "@/lib/audit/request";
 import { isIsoDate, todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
 import { accounts } from "@/lib/db/schema";
@@ -70,6 +71,10 @@ export async function saveCheckSettingsAction(input: {
     cushionCents: p.data.cushionCents,
     toleranceCents: p.data.toleranceCents,
   });
+  await audit(
+    "Changed monthly check settings",
+    "Accounts, cushion and tolerance",
+  );
   applyWorkTags(db, listBills(db).bills);
   refresh();
   return { ok: true as const };
@@ -87,6 +92,10 @@ export async function setRenewalDateAction(input: {
     .safeParse(input);
   if (!p.success) return { ok: false as const, error: "Pick a date." };
   setRenewalDate(getDb(), p.data.merchant, p.data.date);
+  await audit(
+    "Set renewal date",
+    `${p.data.merchant}: ${p.data.date ?? "cleared"}`,
+  );
   refresh();
   return { ok: true as const };
 }

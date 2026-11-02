@@ -1,6 +1,7 @@
 import { isIsoDate } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
 import { exportFilename, transactionsCsv } from "@/lib/export/transactions";
+import { parseWho } from "@/lib/household/people";
 import { parseIdParam } from "@/lib/sqlLike";
 import type { TxnFilter } from "@/lib/transactions/summary";
 
@@ -32,6 +33,7 @@ export async function GET(request: Request): Promise<Response> {
     from,
     to,
     q,
+    who: parseWho(sp.get("who")),
   };
 
   try {
