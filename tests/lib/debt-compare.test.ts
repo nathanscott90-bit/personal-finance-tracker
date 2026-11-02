@@ -59,7 +59,7 @@ describe("comparisonSentence", () => {
       avalanche: totals({ months: 10, interestCents: 4000 }),
       snowball: totals({ months: 12, interestCents: 5000 }),
     });
-    expect(sentence).toBe("Avalanche saves $10.00 and 2 months over snowball.");
+    expect(sentence).toBe("Avalanche saves £10.00 and 2 months over snowball.");
   });
 
   it("credits avalanche on interest alone when months tie (off by 542 cents)", () => {
@@ -67,7 +67,7 @@ describe("comparisonSentence", () => {
       avalanche: totals({ months: 12, interestCents: 5000 }),
       snowball: totals({ months: 12, interestCents: 5542 }),
     });
-    expect(sentence).toBe("Avalanche saves $5.42 over snowball.");
+    expect(sentence).toBe("Avalanche saves £5.42 over snowball.");
   });
 
   it("credits avalanche on months alone when interest ties", () => {
@@ -83,7 +83,7 @@ describe("comparisonSentence", () => {
       avalanche: totals({ months: 12, interestCents: 5000 }),
       snowball: totals({ months: 10, interestCents: 4000 }),
     });
-    expect(sentence).toBe("Snowball saves $10.00 and 2 months over avalanche.");
+    expect(sentence).toBe("Snowball saves £10.00 and 2 months over avalanche.");
   });
 
   it("reports mixed results when avalanche has less interest but finishes later", () => {
@@ -92,7 +92,7 @@ describe("comparisonSentence", () => {
       snowball: totals({ months: 12, interestCents: 5000 }),
     });
     expect(sentence).toBe(
-      "Avalanche pays $10.00 less interest; snowball finishes 2 months sooner.",
+      "Avalanche pays £10.00 less interest; snowball finishes 2 months sooner.",
     );
   });
 
@@ -102,7 +102,7 @@ describe("comparisonSentence", () => {
       snowball: totals({ months: 14, interestCents: 4000 }),
     });
     expect(sentence).toBe(
-      "Snowball pays $10.00 less interest; avalanche finishes 4 months sooner.",
+      "Snowball pays £10.00 less interest; avalanche finishes 4 months sooner.",
     );
   });
 });

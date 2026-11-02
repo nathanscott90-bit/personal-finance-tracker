@@ -95,3 +95,17 @@ describe("updateAccountRecord", () => {
     );
   });
 });
+
+describe("updateAccountRecord owner", () => {
+  it("defaults new accounts to joint and changes owner when given", () => {
+    const { db, a } = seed("checking");
+    expect(a.owner).toBe("joint");
+    updateAccountRecord(db, a.id, { ...base, type: "checking", owner: "p2" });
+    const row = db.select().from(accounts).where(eq(accounts.id, a.id)).get();
+    expect(row?.owner).toBe("p2");
+    // Leaving owner out keeps it.
+    updateAccountRecord(db, a.id, { ...base, type: "checking" });
+    const again = db.select().from(accounts).where(eq(accounts.id, a.id)).get();
+    expect(again?.owner).toBe("p2");
+  });
+});

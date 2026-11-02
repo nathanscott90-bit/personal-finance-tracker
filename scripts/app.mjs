@@ -4,7 +4,11 @@ import http from "node:http";
 import path from "node:path";
 
 const PORT = 3000;
-const URL = `http://localhost:${PORT}`;
+// Loopback only: other devices reach the app through Tailscale Serve, which
+// is what lets the app trust its "who is this" headers (docs/HOUSEHOLD.md).
+// Set FINANCE_HOST=0.0.0.0 to serve the LAN directly instead (no identities).
+const HOST = process.env.FINANCE_HOST || "127.0.0.1";
+const URL = `http://127.0.0.1:${PORT}`;
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 
 function run(args) {
@@ -96,10 +100,14 @@ if (await ping()) {
 }
 
 if (needsBuild()) await run(["run", "build"]);
-const server = spawn(npm, ["run", "start", "--", "-p", String(PORT)], {
-  stdio: "inherit",
-  shell: process.platform === "win32",
-});
+const server = spawn(
+  npm,
+  ["run", "start", "--", "-p", String(PORT), "-H", HOST],
+  {
+    stdio: "inherit",
+    shell: process.platform === "win32",
+  },
+);
 
 function stopServer() {
   if (process.platform === "win32" && server.pid) {

@@ -1,7 +1,11 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { type AuditEntry, listAudit } from "@/lib/audit/log";
+import { audit, currentActor } from "@/lib/audit/request";
 import { getDb } from "@/lib/db/client";
+import type { Actor } from "@/lib/household/identity";
+import { getPeople, type People, setPeople } from "@/lib/household/people";
 import { requestOrigin } from "@/lib/wall/origin";
 import {
   clearToken,
@@ -38,6 +42,7 @@ export async function generateWallTokenAction(): Promise<
 > {
   const token = generateToken();
   storeToken(getDb(), token, new Date());
+  await audit("Issued display token", "Every enrolled display must re-enrol");
   revalidatePath("/settings");
   const origin = await currentOrigin();
   return {
@@ -49,6 +54,31 @@ export async function generateWallTokenAction(): Promise<
 
 export async function revokeWallTokenAction(): Promise<{ ok: true }> {
   clearToken(getDb());
+  await audit("Revoked display token", "Displays cut off");
   revalidatePath("/settings");
   return { ok: true };
+}
+
+export async function getPeopleAction(): Promise<People> {
+  return getPeople(getDb());
+}
+
+export async function savePeopleAction(
+  input: unknown,
+): Promise<{ ok: true; people: People } | { ok: false; error: string }> {
+  const r = setPeople(getDb(), input);
+  if ("error" in r) return { ok: false, error: r.error };
+  await audit("Updated household", `${r.p1.name} and ${r.p2.name}`);
+  for (const path of ["/settings", "/accounts", "/transactions", "/insights"])
+    revalidatePath(path);
+  return { ok: true, people: r };
+}
+
+/** Who this request is from, for the "You are …" line and the setup card. */
+export async function whoAmIAction(): Promise<Actor> {
+  return currentActor();
+}
+
+export async function listActivityAction(limit = 50): Promise<AuditEntry[]> {
+  return listAudit(getDb(), limit);
 }

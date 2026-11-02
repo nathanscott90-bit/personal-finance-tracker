@@ -6,6 +6,7 @@ import { AccountForm } from "@/components/finance/AccountForm";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { AccountDependents } from "@/lib/accounts/dependents";
+import type { Owner } from "@/lib/household/people";
 
 export type AccountCardProps = {
   account: {
@@ -14,9 +15,11 @@ export type AccountCardProps = {
     type: AccountInput["type"];
     institution: string | null;
     color: string;
+    owner: Owner;
     txnCount: number;
     dependents: AccountDependents;
   };
+  people: { p1: string; p2: string };
 };
 
 function plural(n: number, word: string) {
@@ -35,7 +38,10 @@ export function deleteConfirmText(name: string, d: AccountDependents): string {
     : `Delete "${name}"?`;
 }
 
-export function AccountCard({ account }: AccountCardProps) {
+const ownerName = (people: AccountCardProps["people"], owner: Owner) =>
+  owner === "joint" ? "Joint" : people[owner];
+
+export function AccountCard({ account, people }: AccountCardProps) {
   const [editing, setEditing] = useState(false);
   const [pending, start] = useTransition();
   const canDelete = account.txnCount === 0;
@@ -51,7 +57,9 @@ export function AccountCard({ account }: AccountCardProps) {
             type: account.type,
             institution: account.institution ?? "",
             color: account.color,
+            owner: account.owner,
           }}
+          people={people}
           onDone={() => setEditing(false)}
           onCancel={() => setEditing(false)}
         />
@@ -67,7 +75,8 @@ export function AccountCard({ account }: AccountCardProps) {
       <div className="flex-1">
         <div className="text-headline font-semibold">{account.name}</div>
         <div className="text-caption text-ink-2">
-          {account.institution ?? "—"} · {account.type}
+          {account.institution ?? "—"} · {account.type} ·{" "}
+          {ownerName(people, account.owner)}
         </div>
       </div>
       <div className="tnum text-caption text-ink-2">

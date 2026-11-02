@@ -7,6 +7,7 @@ import {
   simplefinAccounts,
   transactions,
 } from "@/lib/db/schema";
+import { CURRENCY } from "@/lib/locale";
 import { getSetting, setSetting } from "@/lib/settings";
 import {
   bump,
@@ -208,8 +209,11 @@ export function mapAccount(
     .get();
   if (!linked) return { ok: false, error: "Unknown SimpleFIN account." };
   if (accountId !== null) {
-    if (linked.currency !== "USD")
-      return { ok: false, error: "Only USD accounts can be synced." };
+    if (linked.currency !== "USD" && linked.currency !== CURRENCY)
+      return {
+        ok: false,
+        error: `Only ${CURRENCY} accounts can be synced.`,
+      };
     if (
       !db
         .select({ id: accounts.id })

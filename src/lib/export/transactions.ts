@@ -93,6 +93,7 @@ export function exportFilename(f: TxnFilter = {}): string {
     f.accountId !== undefined ? `account-${f.accountId}` : null,
     f.parentId !== undefined ? `group-${f.parentId}` : null,
     f.categoryId !== undefined ? `category-${f.categoryId}` : null,
+    f.who && f.who !== "everyone" ? `who-${f.who}` : null,
     f.q
       ? f.q
           .toLowerCase()

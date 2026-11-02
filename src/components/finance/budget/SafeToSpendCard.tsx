@@ -2,15 +2,16 @@ import Link from "next/link";
 import { AmountText } from "@/components/finance/AmountText";
 import { Card } from "@/components/ui/card";
 import type { ResolvedPayday, SafeToSpend } from "@/lib/budget/types";
+import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 
 const longDate = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     day: "numeric",
   });
 const monthName = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "long" });
+  new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, { month: "long" });
 
 export function SafeToSpendCard({
   safe,

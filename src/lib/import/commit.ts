@@ -6,10 +6,11 @@ import { snapshotsFromRows } from "@/lib/networth/snapshots";
 import { recordSnapshots } from "@/lib/networth/store";
 import { loadAliases, resolveMerchant } from "@/lib/normalize/aliases";
 import { loadCities } from "@/lib/normalize/cities";
-import { refreshRecurring } from "@/lib/recurring/refresh";
+import { listBills, refreshRecurring } from "@/lib/recurring/refresh";
 import { findRefundCandidates } from "@/lib/refunds/match";
 import { applyRules } from "@/lib/rules/engine";
 import { applyTransfers } from "@/lib/transfers/apply";
+import { applyWorkTags } from "@/lib/work/work";
 import {
   dedupeHash,
   fileHash,
@@ -176,6 +177,8 @@ export function postProcessImport(
     : { applied: 0 };
   if (freshIds.length) findRefundCandidates(db, { transactionIds: freshIds });
   refreshRecurring(db);
+  // Work card spending and employer repayments stay out of household spending.
+  applyWorkTags(db, listBills(db).bills);
   return { categorized };
 }
 

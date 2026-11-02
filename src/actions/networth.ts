@@ -2,9 +2,12 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { accountLabel } from "@/lib/audit/describe";
+import { audit } from "@/lib/audit/request";
 import { addDays, isIsoDate, todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
 import { accounts } from "@/lib/db/schema";
+import { formatCents } from "@/lib/money";
 import {
   deltaAvailable,
   latestBalances,
@@ -119,6 +122,10 @@ export async function setBalanceAction(input: {
   }
 
   setBalance(db, accountId, date, balanceCents);
+  await audit(
+    "Set balance",
+    `${accountLabel(db, accountId)} ${date}: ${formatCents(balanceCents)}`,
+  );
   refresh();
   return { ok: true };
 }

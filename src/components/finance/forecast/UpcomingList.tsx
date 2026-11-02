@@ -1,9 +1,10 @@
 import { AmountText } from "@/components/finance/AmountText";
 import type { ForecastEvent } from "@/lib/forecast/types";
+import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 
 const shortDate = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     day: "numeric",
   });

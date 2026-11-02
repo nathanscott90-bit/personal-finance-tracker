@@ -1,6 +1,8 @@
 import { getBills } from "@/actions/bills";
+import { getFunding } from "@/actions/funding";
 import { listIrregular, listPlannedCategoryOptions } from "@/actions/spreading";
 import { BillsList } from "@/components/finance/BillsList";
+import { FundingCard } from "@/components/finance/funding/FundingCard";
 import { IrregularExpenses } from "@/components/finance/spreading/IrregularExpenses";
 import { formatCents } from "@/lib/money";
 
@@ -17,6 +19,7 @@ export default async function BillsPage({
     await getBills({ includeDismissed: showDismissed });
   const { items: irregular } = await listIrregular();
   const plannedCategories = await listPlannedCategoryOptions();
+  const funding = await getFunding();
   const live = bills.filter(
     (b) => b.active && !b.dismissed && !b.isIncome,
   ).length;
@@ -32,6 +35,7 @@ export default async function BillsPage({
             : ""}
         </p>
       </div>
+      <FundingCard f={funding} className="mb-6" />
       <BillsList
         bills={bills}
         categories={categories}

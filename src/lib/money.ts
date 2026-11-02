@@ -1,6 +1,8 @@
-const fmt = new Intl.NumberFormat("en-US", {
+import { CURRENCY, LOCALE } from "@/lib/locale";
+
+const fmt = new Intl.NumberFormat(LOCALE, {
   style: "currency",
-  currency: "USD",
+  currency: CURRENCY,
 });
 
 export function parseAmountToCents(raw: string): number | null {
@@ -12,7 +14,16 @@ export function parseAmountToCents(raw: string): number | null {
     negative = true;
     s = s.slice(1, -1);
   }
-  s = s.replace(/[\s$,]/g, "").replace(/−/g, "-");
+  // Strip whitespace, thousands separators and any currency symbol (UK
+  // statements often carry "£"; a Latin-1 export can turn it into "Â£").
+  s = s
+    .replace(/[\s,$£€Â]/g, "")
+    .replace(/^(GBP|USD|EUR)|(GBP|USD|EUR)$/i, "")
+    .replace(/−/g, "-");
+  // Trailing sign or CR/DR marker: "12.34-", "12.34 CR", "12.34 DR"
+  if (/^\d*\.?\d+-$/.test(s)) s = `-${s.slice(0, -1)}`;
+  if (/CR$/i.test(s)) s = s.slice(0, -2);
+  else if (/DR$/i.test(s)) s = `-${s.slice(0, -2)}`;
   if (s.startsWith("-")) {
     negative = !negative;
     s = s.slice(1);

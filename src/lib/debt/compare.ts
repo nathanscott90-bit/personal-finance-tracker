@@ -1,8 +1,9 @@
+import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 import type { PlanTotals } from "./types";
 
 function monthLabel(month: string): string {
-  return new Date(`${month}-15T00:00:00`).toLocaleDateString("en-US", {
+  return new Date(`${month}-15T00:00:00`).toLocaleDateString(LOCALE, {
     month: "long",
     year: "numeric",
   });

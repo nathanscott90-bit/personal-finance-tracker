@@ -13,10 +13,11 @@ import {
 import { AmountText } from "@/components/finance/AmountText";
 import type { ForecastEvent, ForecastPoint } from "@/lib/forecast/types";
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
+import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 
 function shortDate(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     day: "numeric",
   });

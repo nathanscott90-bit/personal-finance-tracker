@@ -6,8 +6,10 @@ import {
 } from "@/lib/categories/ensure";
 import type { Db } from "@/lib/db/client";
 import { rules } from "@/lib/db/schema";
+import { LOCALE } from "@/lib/locale";
+import { UK_RULES, US_RULES_EXCLUDED_IN_UK } from "./builtin-uk";
 
-type BuiltinRule = {
+export type BuiltinRule = {
   pattern: string;
   /** Seed key of the target leaf category (see `src/lib/categories/defaults.ts`), not its display name — a renamed default leaf keeps its seed key. */
   category: string;
@@ -19,7 +21,7 @@ type BuiltinRule = {
 };
 
 // Order = priority within the same tier. Contains-matches on the cleaned merchant unless `field: "raw"`.
-export const BUILTIN_RULES: BuiltinRule[] = [
+const US_RULES: BuiltinRule[] = [
   // income
   {
     pattern: "payroll",
@@ -254,6 +256,18 @@ export const BUILTIN_RULES: BuiltinRule[] = [
     priority: 60,
   },
 ];
+
+/**
+ * The active rule set. Outside the US, the UK rules run first and the few US
+ * rules that misread UK statement wording are dropped; the rest (Netflix,
+ * Spotify, Airbnb, the eating-out catch-all…) apply anywhere.
+ */
+export const BUILTIN_RULES: BuiltinRule[] = /^en-US$/i.test(LOCALE)
+  ? US_RULES
+  : [
+      ...UK_RULES,
+      ...US_RULES.filter((r) => !US_RULES_EXCLUDED_IN_UK.has(r.pattern)),
+    ];
 
 /**
  * Resolve each builtin rule's target leaf. A seed key the user has deleted

@@ -4,6 +4,7 @@ import { AmountText } from "@/components/finance/AmountText";
 import { ReviewScreen } from "@/components/finance/ReviewScreen";
 import { SyncButton } from "@/components/finance/simplefin/SyncButton";
 import { Card } from "@/components/ui/card";
+import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 import type {
   AccountImportRow,
@@ -20,13 +21,13 @@ const LINK_BUTTON =
   "inline-block rounded-control bg-accent px-5 py-2.5 text-body font-medium text-white";
 
 const shortDate = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     day: "numeric",
   });
 
 const monthName = (month: string) =>
-  new Date(`${month}-15T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${month}-15T00:00:00`).toLocaleDateString(LOCALE, {
     month: "long",
   });
 

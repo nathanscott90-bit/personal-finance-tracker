@@ -26,7 +26,81 @@ const P = (
   ...cols,
 });
 
+/**
+ * UK banks. Column layouts are those of each bank's own CSV download; dates
+ * may be "28/09/2024" or "28 Sep 2024" (both parse as day-first). Nationwide
+ * puts account details above the header, which the importer skips by itself.
+ */
+export const UK_PROFILES: BankProfile[] = [
+  P(
+    "NatWest",
+    [
+      "Date",
+      "Type",
+      "Description",
+      "Value",
+      "Balance",
+      "Account Name",
+      "Account Number",
+    ],
+    {
+      dateCol: "Date",
+      descCol: "Description",
+      amountCol: "Value",
+      balanceCol: "Balance",
+      signConvention: "outflow_negative",
+      dateFormat: "DMY",
+    },
+  ),
+  P(
+    "Nationwide (current account)",
+    [
+      "Date",
+      "Transaction type",
+      "Description",
+      "Paid out",
+      "Paid in",
+      "Balance",
+    ],
+    {
+      dateCol: "Date",
+      descCol: "Description",
+      debitCol: "Paid out",
+      creditCol: "Paid in",
+      balanceCol: "Balance",
+      signConvention: "debit_credit_cols",
+      dateFormat: "DMY",
+    },
+  ),
+  P(
+    "Nationwide (current account, older export)",
+    ["Date", "Transactions", "Credits", "Debits", "Balance"],
+    {
+      dateCol: "Date",
+      descCol: "Transactions",
+      debitCol: "Debits",
+      creditCol: "Credits",
+      balanceCol: "Balance",
+      signConvention: "debit_credit_cols",
+      dateFormat: "DMY",
+    },
+  ),
+  P(
+    "Nationwide (credit card)",
+    ["Date", "Transactions", "Location", "Paid out", "Paid in"],
+    {
+      dateCol: "Date",
+      descCol: "Transactions",
+      debitCol: "Paid out",
+      creditCol: "Paid in",
+      signConvention: "debit_credit_cols",
+      dateFormat: "DMY",
+    },
+  ),
+];
+
 export const BUILTIN_PROFILES: BankProfile[] = [
+  ...UK_PROFILES,
   P(
     "Chase (card)",
     [

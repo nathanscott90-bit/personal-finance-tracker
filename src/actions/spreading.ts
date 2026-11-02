@@ -1,9 +1,11 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { audit } from "@/lib/audit/request";
 import { listBudgetLeaves } from "@/lib/budget/store";
 import { isIsoDate, todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
+import { formatCents } from "@/lib/money";
 import { listBills } from "@/lib/recurring/refresh";
 import { irregularItems } from "@/lib/spreading/items";
 import {
@@ -77,7 +79,13 @@ export async function createPlannedExpense(input: {
       error: p.error.issues[0]?.message ?? "Invalid planned expense.",
     };
   const r = createPlanned(getDb(), p.data);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit(
+      "Added planned expense",
+      `${p.data.name}: ${formatCents(p.data.amountCents)}`,
+    );
+    refresh();
+  }
   return r;
 }
 
@@ -105,7 +113,13 @@ export async function updatePlannedExpense(input: {
     };
   const { id, ...patch } = p.data;
   const r = updatePlanned(getDb(), id, patch);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit(
+      "Edited planned expense",
+      patch.name ?? `planned expense #${id}`,
+    );
+    refresh();
+  }
   return r;
 }
 
@@ -115,6 +129,9 @@ export async function archivePlannedExpense(
   const p = idSchema.safeParse(input);
   if (!p.success) return { ok: false, error: "Invalid id." };
   const r = archivePlanned(getDb(), p.data);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Archived planned expense", `planned expense #${p.data}`);
+    refresh();
+  }
   return r;
 }

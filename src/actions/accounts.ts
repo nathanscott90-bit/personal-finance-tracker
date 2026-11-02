@@ -1,4 +1,5 @@
 "use server";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { deleteAccountIfEmpty } from "@/lib/accounts/delete";
 import {
@@ -7,8 +8,11 @@ import {
 } from "@/lib/accounts/dependents";
 import { accountIdSchema, accountInput } from "@/lib/accounts/schema";
 import { updateAccountRecord } from "@/lib/accounts/update";
+import { accountLabel } from "@/lib/audit/describe";
+import { audit } from "@/lib/audit/request";
 import { getDb } from "@/lib/db/client";
 import { accounts } from "@/lib/db/schema";
+import { getPeople, ownerLabel } from "@/lib/household/people";
 
 export type { AccountInput } from "@/lib/accounts/schema";
 
@@ -51,6 +55,7 @@ export async function createAccount(
     .values(p.data)
     .returning({ id: accounts.id })
     .all();
+  await audit("Added account", `${p.data.name} (${p.data.type})`);
   revalidateAll();
   return { ok: true, id: row.id };
 }
@@ -63,15 +68,39 @@ export async function updateAccount(
   const p = accountInput.safeParse(input);
   if (!i.success || !p.success)
     return { ok: false, error: "Check the account details." };
-  const result = updateAccountRecord(getDb(), i.data, p.data);
-  if (result.ok) revalidateAll();
+  const db = getDb();
+  const before = db
+    .select({ name: accounts.name, owner: accounts.owner })
+    .from(accounts)
+    .where(eq(accounts.id, i.data))
+    .get();
+  const result = updateAccountRecord(db, i.data, p.data);
+  if (result.ok && before) {
+    const people = getPeople(db);
+    const changes = [
+      before.name !== p.data.name ? `renamed to ${p.data.name}` : null,
+      before.owner !== p.data.owner
+        ? `now ${ownerLabel(people, p.data.owner)}`
+        : null,
+    ].filter(Boolean);
+    await audit(
+      "Edited account",
+      `${before.name}${changes.length ? ` · ${changes.join(", ")}` : ""}`,
+    );
+    revalidateAll();
+  }
   return result;
 }
 
 export async function deleteAccount(id: unknown): Promise<AccountResult> {
   const i = accountIdSchema.safeParse(id);
   if (!i.success) return { ok: false, error: "Unknown account." };
-  const result = deleteAccountIfEmpty(getDb(), i.data);
-  if (result.ok) revalidateAll();
+  const db = getDb();
+  const name = accountLabel(db, i.data);
+  const result = deleteAccountIfEmpty(db, i.data);
+  if (result.ok) {
+    await audit("Deleted account", name);
+    revalidateAll();
+  }
   return result;
 }

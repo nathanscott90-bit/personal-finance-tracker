@@ -22,11 +22,14 @@ export function TransactionFilters({
   accounts,
   categories,
   groups = [],
+  people,
 }: {
   accounts: Opt[];
   categories: LeafOpt[];
   /** Groups to offer as "(all)" entries; each precedes its own leaves. */
   groups?: Opt[];
+  /** Household names; when given, a "whose money" select is shown. */
+  people?: { p1: string; p2: string };
 }) {
   const router = useRouter();
   const path = usePathname();
@@ -82,6 +85,21 @@ export function TransactionFilters({
         maxLength={80}
         onChange={(e) => setQ(e.target.value)}
       />
+      {people && (
+        <select
+          className={sel}
+          aria-label="Whose money"
+          value={sp.get("who") ?? ""}
+          onChange={(e) => set("who", e.target.value)}
+        >
+          <option value="">Everyone</option>
+          <option value="joint">Joint</option>
+          <option value="p1">{people.p1}</option>
+          <option value="p1-joint">{people.p1} + joint</option>
+          <option value="p2">{people.p2}</option>
+          <option value="p2-joint">{people.p2} + joint</option>
+        </select>
+      )}
       <select
         className={sel}
         value={sp.get("account") ?? ""}

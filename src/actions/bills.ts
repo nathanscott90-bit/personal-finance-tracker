@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { CategoryOption } from "@/actions/review";
 import { listCategoryOptions } from "@/actions/transactions";
+import { billLabel, categoryLabel, txnLabel } from "@/lib/audit/describe";
+import { audit } from "@/lib/audit/request";
 import { todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
 import { recurring } from "@/lib/db/schema";
@@ -66,6 +68,7 @@ export async function dismissBill(input: number): Promise<{ ok: true } | Fail> {
     .set({ dismissed: true })
     .where(eq(recurring.id, p.data))
     .run();
+  await audit("Dismissed bill", billLabel(getDb(), p.data));
   refresh();
   return { ok: true };
 }
@@ -79,6 +82,7 @@ export async function undismissBill(
     .set({ dismissed: false })
     .where(eq(recurring.id, p.data))
     .run();
+  await audit("Restored bill", billLabel(getDb(), p.data));
   refresh();
   return { ok: true };
 }
@@ -100,6 +104,10 @@ export async function markAsBillAction(input: {
   // A row declared on an uncategorized charge adopts the merchant's majority
   // category here, rather than waiting for the next refresh.
   if (r.created) refreshRecurring(getDb());
+  await audit(
+    "Marked as bill",
+    `${txnLabel(getDb(), p.data.transactionId)} (${p.data.cadence})`,
+  );
   refreshAll();
   return r;
 }
@@ -108,8 +116,10 @@ export async function removeManualBillAction(
 ): Promise<{ ok: true } | Fail> {
   const p = id.safeParse(input);
   if (!p.success) return { ok: false, error: "Invalid id." };
+  const label = billLabel(getDb(), p.data);
   if (!removeManualBill(getDb(), p.data))
     return { ok: false, error: "Only manual bills can be removed." };
+  await audit("Removed bill", label);
   refreshAll();
   return { ok: true };
 }
@@ -139,6 +149,10 @@ export async function setBillCategory(input: {
     { direction: directionOf(rec.avgCents) },
   );
   const { applied } = applyRules(db, { onlyUncategorized: false });
+  await audit(
+    "Categorised bill",
+    `${billLabel(db, p.data.billId)} → ${categoryLabel(db, p.data.categoryId)}`,
+  );
   refreshRecurring(db);
   refresh();
   return { ok: true, applied };
@@ -161,6 +175,7 @@ export async function renameBillMerchant(input: {
     pattern: p.data.merchant,
     merchant: p.data.name,
   });
+  await audit("Renamed merchant", `${p.data.merchant} → ${p.data.name}`);
   refreshRecurring(db);
   refresh();
   return { ok: true, updated: r.updated };

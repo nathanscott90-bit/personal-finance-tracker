@@ -16,11 +16,49 @@ export function isIsoDate(s: string): boolean {
   return !!m && valid(+m[1], +m[2], +m[3]);
 }
 
+const MONTHS: Record<string, number> = {
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  aug: 8,
+  sep: 9,
+  oct: 10,
+  nov: 11,
+  dec: 12,
+};
+
+/**
+ * "28 Sep 2024", "28-Sep-24", "28 Sept 2024", "28 September 2024",
+ * "28/Sep/2024" — the day-name-year layout UK banks (NatWest, Nationwide)
+ * export. Unambiguous, so it is read the same whatever the profile's format.
+ */
+const TEXT_MONTH_RE =
+  /^(\d{1,2})[\s/\-.]+([A-Za-z]{3,9})\.?[\s/\-.,]+(\d{2,4})$/;
+
+export function isTextMonthDate(raw: string): boolean {
+  const m = TEXT_MONTH_RE.exec(raw.trim());
+  return !!m && m[2].slice(0, 3).toLowerCase() in MONTHS;
+}
+
 export function parseDateWithFormat(
   raw: string,
   format: DateFormat,
 ): string | null {
   const s = raw.trim();
+  const tm = TEXT_MONTH_RE.exec(s);
+  if (tm) {
+    const mo = MONTHS[tm[2].slice(0, 3).toLowerCase()];
+    if (!mo) return null;
+    let y = +tm[3];
+    if (y < 100) y += 2000;
+    const d = +tm[1];
+    if (!valid(y, mo, d)) return null;
+    return `${y}-${pad(mo)}-${pad(d)}`;
+  }
   let parts: number[];
   if (/^\d{8}$/.test(s)) {
     parts =

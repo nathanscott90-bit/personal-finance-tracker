@@ -1,6 +1,8 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { accountLabel } from "@/lib/audit/describe";
+import { audit } from "@/lib/audit/request";
 import { backupDb } from "@/lib/db/backup";
 import { dbPath, getDb } from "@/lib/db/client";
 import { bankProfiles } from "@/lib/db/schema";
@@ -70,13 +72,20 @@ export async function commitFile(input: {
     { backup: () => backupDb(dbPath()), builtins: BUILTIN_PROFILES },
     parsed.data,
   );
-  if (res.ok) revalidatePath("/transactions");
+  if (res.ok) {
+    await audit(
+      "Imported statement",
+      `${parsed.data.filename} into ${accountLabel(getDb(), parsed.data.accountId)}: ${res.newCount} new, ${res.dupCount} skipped`,
+    );
+    revalidatePath("/transactions");
+  }
   return res;
 }
 
 export async function undoImportAction(importId: number) {
   const db = getDb();
   const n = undoImport(db, importId);
+  await audit("Undid import", `import #${importId}, ${n} rows removed`);
   refreshRecurring(db);
   revalidatePath("/transactions");
   revalidatePath("/bills");

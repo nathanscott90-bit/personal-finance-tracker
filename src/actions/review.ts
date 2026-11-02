@@ -3,6 +3,8 @@ import { eq, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { listCategoryOptions } from "@/actions/transactions";
+import { categoryLabel, txnLabel } from "@/lib/audit/describe";
+import { audit } from "@/lib/audit/request";
 import { findCategoryId } from "@/lib/categories/ensure";
 import { getDb } from "@/lib/db/client";
 import { transactions, transferPairs } from "@/lib/db/schema";
@@ -102,6 +104,10 @@ export async function decideCategory(
     // touched, so their own decisions still stand.
     ruleApplied = applyRules(db, { onlyUncategorized: false }).applied;
   }
+  await audit(
+    "Reviewed",
+    `${txnLabel(db, p.data.id)} → ${categoryLabel(db, p.data.categoryId)}${p.data.always ? ` (always, rule on "${p.data.always.pattern}")` : ""}`,
+  );
   refreshRecurring(db);
   refresh();
   return { ok: true, ruleApplied };
@@ -169,6 +175,7 @@ export async function restoreTransaction(
     .run();
   if (res.changes === 0)
     return { ok: false, error: "That transaction no longer exists." };
+  await audit("Undid review", txnLabel(db, p.data.id));
   refresh();
   return { ok: true };
 }
@@ -220,6 +227,10 @@ export async function toggleTransfer(
           .run();
     }
   });
+  await audit(
+    next ? "Marked as transfer" : "Unmarked transfer",
+    txnLabel(db, p.data),
+  );
   refreshRecurring(db);
   refresh();
   return { ok: true, isTransfer: next };
@@ -234,6 +245,10 @@ export async function resolveDuplicate(input: {
     .safeParse(input);
   if (!p.success) return { ok: false, error: "Invalid request." };
   const db = getDb();
+  await audit(
+    p.data.action === "keep" ? "Kept possible duplicate" : "Deleted duplicate",
+    txnLabel(db, p.data.id),
+  );
   if (p.data.action === "keep")
     db.update(transactions)
       .set({ possibleDuplicate: false })
@@ -265,6 +280,10 @@ export async function resolveRefund(input: {
     const r = confirmRefund(db, p.data.id);
     if (!r.ok) return r;
   } else rejectRefund(db, p.data.id);
+  await audit(
+    p.data.confirm ? "Confirmed refund" : "Rejected refund match",
+    txnLabel(db, p.data.id),
+  );
   refresh();
   return { ok: true };
 }
@@ -288,6 +307,10 @@ export async function saveSplitsAction(
   const db = getDb();
   const r = saveSplits(db, p.data.id, p.data.rows);
   if (r.ok) {
+    await audit(
+      "Split transaction",
+      `${txnLabel(db, p.data.id)} into ${p.data.rows.length} lines`,
+    );
     refreshRecurring(db);
     refresh();
   }
@@ -301,6 +324,7 @@ export async function clearSplitsAction(
   if (!p.success) return { ok: false, error: "Invalid id." };
   const db = getDb();
   clearSplits(db, p.data);
+  await audit("Removed split", txnLabel(db, p.data));
   refreshRecurring(db);
   refresh();
   return { ok: true };
@@ -322,6 +346,10 @@ export async function createAliasAction(input: {
   if (error) return { ok: false, error };
   const db = getDb();
   const r = createAlias(db, p.data);
+  await audit(
+    "Added merchant name",
+    `"${p.data.pattern}" → ${p.data.merchant} (${r.updated} rows)`,
+  );
   refreshRecurring(db);
   refresh();
   return { ok: true, updated: r.updated };

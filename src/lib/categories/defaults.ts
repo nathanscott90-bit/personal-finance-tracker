@@ -19,7 +19,7 @@ export type DefaultParent = {
  * matters because the sweep sits on hot paths (every transaction listing,
  * every transfer pass).
  */
-export const CATEGORIES_SEED_VERSION = 2;
+export const CATEGORIES_SEED_VERSION = 4;
 export const CATEGORIES_SEED_VERSION_KEY = "categories_seed_version";
 
 /** "Card payments" -> "card-payments" */
@@ -57,6 +57,7 @@ export const DEFAULT_CATEGORIES: DefaultParent[] = [
   p("home", "Home", "expense", "house", true, [
     { name: "Rent/Mortgage", isFixed: true },
     { name: "Utilities", isFixed: true },
+    { name: "Council tax", isFixed: true },
     { name: "Insurance", isFixed: true },
     { name: "Repairs & household" },
   ]),
@@ -97,6 +98,12 @@ export const DEFAULT_CATEGORIES: DefaultParent[] = [
   ]),
   p("savings", "Savings & Investing", "expense", "piggy-bank", true, [
     { name: "Savings & investing", isFixed: true },
+  ]),
+  // Money spent for an employer and paid back: kept out of household
+  // spending and income (kind "transfer"), tracked on the Monthly check.
+  p("work", "Work expenses", "transfer", "briefcase", false, [
+    { name: "Work expenses" },
+    { name: "Work repayments" },
   ]),
   // System categories have no leaves; they are assigned directly (so findCategoryId("Transfer") is unambiguous).
   p("transfer", "Transfer", "transfer", "arrow-left-right", false, []),

@@ -72,6 +72,7 @@ describe("listBudgetLeaves", () => {
     expect(homeLeaves.map((l) => l.name)).toEqual([
       "Rent/Mortgage",
       "Utilities",
+      "Council tax",
       "Insurance",
       "Repairs & household",
     ]);

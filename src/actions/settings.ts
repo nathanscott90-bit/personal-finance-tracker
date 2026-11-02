@@ -2,6 +2,8 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { categoryLabel } from "@/lib/audit/describe";
+import { audit } from "@/lib/audit/request";
 import { PAYDAY_KEY, paydaySchema, resolvePayday } from "@/lib/budget/payday";
 import type { PaydayConfig, ResolvedPayday } from "@/lib/budget/types";
 import {
@@ -57,7 +59,10 @@ export async function renameCategoryAction(input: {
   if (!p.success)
     return { ok: false as const, error: "Name must be 1–40 characters." };
   const r = renameCategory(getDb(), p.data.id, p.data.name);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Renamed category", p.data.name);
+    refresh();
+  }
   return r;
 }
 export async function addCategoryAction(input: {
@@ -73,14 +78,21 @@ export async function addCategoryAction(input: {
   const r = addCategory(getDb(), p.data.parentId, p.data.name, {
     isFixed: p.data.isFixed,
   });
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Added category", p.data.name);
+    refresh();
+  }
   return r;
 }
 export async function archiveCategoryAction(input: number) {
   const p = id.safeParse(input);
   if (!p.success) return { ok: false as const, error: "Invalid id." };
+  const label = categoryLabel(getDb(), p.data);
   const r = archiveCategory(getDb(), p.data);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Archived category", label);
+    refresh();
+  }
   return r;
 }
 export async function setCategoryFixedAction(input: {
@@ -90,7 +102,13 @@ export async function setCategoryFixedAction(input: {
   const p = z.object({ id, isFixed: z.boolean() }).safeParse(input);
   if (!p.success) return { ok: false as const, error: "Invalid request." };
   const r = setCategoryFixed(getDb(), p.data.id, p.data.isFixed);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit(
+      "Changed fixed/variable",
+      `${categoryLabel(getDb(), p.data.id)}: ${p.data.isFixed ? "fixed" : "variable"}`,
+    );
+    refresh();
+  }
   return r;
 }
 export async function addParentCategoryAction(input: {
@@ -101,7 +119,10 @@ export async function addParentCategoryAction(input: {
   if (!p.success)
     return { ok: false as const, error: "Name must be 1–40 characters." };
   const r = addParentCategory(getDb(), p.data.name, { color: p.data.color });
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Added group", p.data.name);
+    refresh();
+  }
   return r;
 }
 export async function renameParentCategoryAction(input: {
@@ -112,7 +133,10 @@ export async function renameParentCategoryAction(input: {
   if (!p.success)
     return { ok: false as const, error: "Name must be 1–40 characters." };
   const r = renameParentCategory(getDb(), p.data.id, p.data.name);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Renamed group", p.data.name);
+    refresh();
+  }
   return r;
 }
 export async function setParentColorAction(input: {
@@ -128,8 +152,12 @@ export async function setParentColorAction(input: {
 export async function archiveParentCategoryAction(input: number) {
   const p = id.safeParse(input);
   if (!p.success) return { ok: false as const, error: "Invalid id." };
+  const label = categoryLabel(getDb(), p.data);
   const r = archiveParentCategory(getDb(), p.data);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Archived group", label);
+    refresh();
+  }
   return r;
 }
 export async function listCategoryReferencesAction(input: number) {
@@ -143,15 +171,23 @@ export async function deleteCategoryAction(input: {
 }) {
   const p = z.object({ id, moveTo: id.optional() }).safeParse(input);
   if (!p.success) return { ok: false as const, error: "Invalid request." };
+  const label = categoryLabel(getDb(), p.data.id);
   const r = deleteCategory(getDb(), p.data.id, { moveTo: p.data.moveTo });
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Deleted category", label);
+    refresh();
+  }
   return r;
 }
 export async function deleteParentCategoryAction(input: number) {
   const p = id.safeParse(input);
   if (!p.success) return { ok: false as const, error: "Invalid id." };
+  const label = categoryLabel(getDb(), p.data);
   const r = deleteParentCategory(getDb(), p.data);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Deleted group", label);
+    refresh();
+  }
   return r;
 }
 
@@ -174,11 +210,13 @@ export async function setPaydayAction(
   const p = paydaySchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: "Invalid schedule." };
   setSetting(getDb(), PAYDAY_KEY, p.data);
+  await audit("Changed payday", JSON.stringify(p.data));
   refresh();
   return { ok: true };
 }
 export async function clearPaydayAction(): Promise<{ ok: true }> {
   getDb().delete(settings).where(eq(settings.key, PAYDAY_KEY)).run();
+  await audit("Cleared payday", "Back to automatic");
   refresh();
   return { ok: true };
 }

@@ -1,27 +1,28 @@
 import Link from "next/link";
 import { AmountText } from "@/components/finance/AmountText";
 import { Card } from "@/components/ui/card";
+import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 import { weekStart } from "@/lib/ritual/weeks";
 import type { WallSummary } from "@/lib/wall/types";
 
 /** Presentation only: the wall never derives a date, it only words the ones it is given. */
 const longDate = (iso: string) =>
-  new Intl.DateTimeFormat("en-US", {
+  new Intl.DateTimeFormat(LOCALE, {
     weekday: "long",
     month: "long",
     day: "numeric",
   }).format(new Date(`${iso}T00:00:00`));
 
 const shortDate = (iso: string) =>
-  new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(
+  new Intl.DateTimeFormat(LOCALE, { month: "short", day: "numeric" }).format(
     new Date(`${iso}T00:00:00`),
   );
 
 /** "Mon 8" — en-US puts a bare weekday+day the other way round, so compose it. */
 const dayLabel = (iso: string) => {
   const d = new Date(`${iso}T00:00:00`);
-  const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(
+  const weekday = new Intl.DateTimeFormat(LOCALE, { weekday: "short" }).format(
     d,
   );
   return `${weekday} ${d.getDate()}`;

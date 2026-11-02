@@ -6,13 +6,14 @@ import { ForecastControls } from "@/components/finance/forecast/ForecastControls
 import { UpcomingList } from "@/components/finance/forecast/UpcomingList";
 import { Card } from "@/components/ui/card";
 import { addDays, monthOf } from "@/lib/dates";
+import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 const longDate = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     day: "numeric",
   });

@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # "Run workflow" button on the Actions tab, to re-check a branch by hand.
+  workflow_dispatch:
 
 permissions:
   contents: read

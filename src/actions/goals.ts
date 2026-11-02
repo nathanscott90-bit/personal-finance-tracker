@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { audit } from "@/lib/audit/request";
 import { isIsoDate, todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/lib/goals/store";
 import type { Goal } from "@/lib/goals/types";
 import { loadLines } from "@/lib/insights/lines";
+import { formatCents } from "@/lib/money";
 
 type Fail = { ok: false; error: string };
 const idSchema = z.number().int().positive();
@@ -52,7 +54,13 @@ export async function createGoalAction(input: {
   if (!p.success)
     return { ok: false, error: p.error.issues[0]?.message ?? "Invalid goal." };
   const r = createGoal(getDb(), { ...p.data, today: todayIso() });
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit(
+      "Added goal",
+      `${p.data.name}: ${formatCents(p.data.targetCents)}`,
+    );
+    refresh();
+  }
   return r;
 }
 
@@ -75,7 +83,10 @@ export async function updateGoalAction(input: {
     return { ok: false, error: p.error.issues[0]?.message ?? "Invalid goal." };
   const { id, ...patch } = p.data;
   const r = updateGoal(getDb(), id, patch);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Edited goal", patch.name ?? `goal #${id}`);
+    refresh();
+  }
   return r;
 }
 
@@ -85,6 +96,9 @@ export async function archiveGoalAction(
   const p = idSchema.safeParse(input);
   if (!p.success) return { ok: false, error: "Invalid id." };
   const r = archiveGoal(getDb(), p.data);
-  if (r.ok) refresh();
+  if (r.ok) {
+    await audit("Archived goal", `goal #${p.data}`);
+    refresh();
+  }
   return r;
 }

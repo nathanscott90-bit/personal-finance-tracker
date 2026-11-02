@@ -13,10 +13,13 @@ export function AvgWindowPicker({
   month,
   avgMonths,
   basePath,
+  extraParams = {},
 }: {
   month: string;
   avgMonths: AvgMonths;
   basePath: string;
+  /** Query params to carry along, so a sibling picker's choice survives. */
+  extraParams?: Record<string, string>;
 }) {
   const router = useRouter();
   return (
@@ -32,6 +35,7 @@ export function AvgWindowPicker({
               `${basePath}?${new URLSearchParams({
                 month,
                 avg: String(n),
+                ...extraParams,
               })}`,
             )
           }

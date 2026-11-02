@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
+import { LOCALE } from "@/lib/locale";
 
-const inter = Inter({
-  subsets: ["latin"],
+// Bundled rather than fetched from Google at build time, so the app builds
+// and renders offline.
+const inter = localFont({
+  src: "../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
   variable: "--font-inter",
+  weight: "100 900",
   display: "swap",
 });
 
@@ -19,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang={LOCALE} className={inter.variable}>
       <body>{children}</body>
     </html>
   );

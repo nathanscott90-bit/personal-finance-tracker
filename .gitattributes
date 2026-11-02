@@ -3,3 +3,5 @@
 *.jpg binary
 *.db binary
 *.ico binary
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

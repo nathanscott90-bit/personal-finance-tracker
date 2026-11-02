@@ -34,7 +34,12 @@ export function normalizeRow(
   }
   if (amountCents === null) return fail("Missing amount");
 
-  const rawDescription = (row[profile.descCol] ?? "").trim();
+  // NatWest prefixes text cells with an apostrophe to stop Excel
+  // reformatting them ("'TESCO STORES 1234").
+  const rawDescription = (row[profile.descCol] ?? "")
+    .trim()
+    .replace(/^'+/, "")
+    .trim();
   if (!rawDescription) return fail("Missing description");
   const balanceRaw = profile.balanceCol ? row[profile.balanceCol] : undefined;
   const balanceCents = balanceRaw ? parseAmountToCents(balanceRaw) : null;

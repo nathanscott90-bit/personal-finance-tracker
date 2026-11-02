@@ -19,6 +19,7 @@ import { Sparkline } from "@/components/finance/charts/Sparkline";
 import { CADENCE_LABELS as CADENCE } from "@/components/finance/MarkAsBillForm";
 import { Button } from "@/components/ui/button";
 import { PARENT_COLORS } from "@/lib/categories/palette";
+import { CURRENCY, LOCALE } from "@/lib/locale";
 
 const due = (d: number) =>
   d < 0
@@ -27,9 +28,9 @@ const due = (d: number) =>
       ? "due today"
       : `due in ${d} day${d === 1 ? "" : "s"}`;
 
-const monthlyFmt = new Intl.NumberFormat("en-US", {
+const monthlyFmt = new Intl.NumberFormat(LOCALE, {
   style: "currency",
-  currency: "USD",
+  currency: CURRENCY,
 });
 
 type RunFn = <R extends { ok: boolean; error?: string }>(

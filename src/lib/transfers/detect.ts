@@ -160,6 +160,10 @@ export const OWN_TRANSFER_PATTERNS: RegExp[] = [
   /\btransfer\s+(?:to|from)\s+(?:chk|sav|checking|savings|mma|money\s+market)\b/i,
   /\bach\s+xfer\b/i,
   /\bxfer\s+(?:to|from)\s+(?:chk|sav|checking|savings)\b/i,
+  // UK: "Transfer to 600000 12345678", "FROM A/C 12345678", "TFR TO SAVINGS"
+  /\btransfer\s+(?:to|from)\s+\d{2}-?\d{2}-?\d{2}\b/i,
+  /\b(?:to|from)\s+a\/c\b/i,
+  /\btfr\s+(?:to|from)\b/i,
 ];
 
 /** The credit-card statement's side of a card payment. Only meaningful on a credit account. */
@@ -169,6 +173,8 @@ export const CARD_SIDE_PATTERNS: RegExp[] = [
   /\bautopay\s+payment\b/i,
   /\bmobile\s+payment\b/i,
   /\bonline\s+payment\b/i,
+  /\bpayment\s+received\b/i,
+  /\bdirect\s+debit\s+payment\b/i,
 ];
 
 export function isOwnTransfer(desc: string, accountType: string): boolean {

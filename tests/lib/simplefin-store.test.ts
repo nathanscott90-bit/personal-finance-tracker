@@ -297,7 +297,7 @@ describe("simplefin store", () => {
     });
     expect(mapAccount(db, "ACT-2", chk.id)).toEqual({
       ok: false,
-      error: "Only USD accounts can be synced.",
+      error: "Only GBP accounts can be synced.",
     });
     expect(mapAccount(db, "ACT-1", chk.id)).toEqual({ ok: true });
     expect(mapAccount(db, "ACT-3", chk.id)).toEqual({
