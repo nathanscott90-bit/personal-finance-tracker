@@ -7,11 +7,12 @@ import {
 import { LockedCard } from "@/components/finance/budget/LockedCard";
 import { MonthPicker } from "@/components/finance/MonthPicker";
 import { Card } from "@/components/ui/card";
+import { LOCALE } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
 const monthLabel = (m: string) =>
-  new Date(`${m}-15T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${m}-15T00:00:00`).toLocaleDateString(LOCALE, {
     month: "long",
     year: "numeric",
   });

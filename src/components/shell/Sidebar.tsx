@@ -3,6 +3,7 @@ import {
   CalendarCheck,
   CalendarClock,
   CircleDollarSign,
+  ClipboardCheck,
   CreditCard,
   House,
   Landmark,
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/home", label: "Home", icon: House },
+  { href: "/check", label: "Monthly check", icon: ClipboardCheck },
   { href: "/weekly", label: "Weekly review", icon: CalendarCheck },
   { href: "/review", label: "Review", icon: ListChecks },
   { href: "/insights", label: "Insights", icon: PieChart },

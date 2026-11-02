@@ -10,11 +10,12 @@ import {
   YAxis,
 } from "recharts";
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
+import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 import type { NetWorthPoint } from "@/lib/networth/types";
 
 function monthLabel(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
   });
 }

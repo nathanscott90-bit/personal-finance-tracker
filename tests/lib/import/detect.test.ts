@@ -42,9 +42,9 @@ describe("detectDateFormat", () => {
       format: "MDY",
       ambiguous: false,
     }));
-  it("all ≤12 is ambiguous, defaults MDY", () =>
+  it("all ≤12 is ambiguous, defaults to the locale's order (DMY in en-GB)", () =>
     expect(detectDateFormat(["03/04/2026", "05/06/2026"])).toEqual({
-      format: "MDY",
+      format: "DMY",
       ambiguous: true,
     }));
 });

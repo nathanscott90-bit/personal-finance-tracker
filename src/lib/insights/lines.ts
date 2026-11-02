@@ -135,6 +135,10 @@ export function loadLines(
   for (const s of splits)
     byTxn.set(s.transactionId, [...(byTxn.get(s.transactionId) ?? []), s]);
   const out: Line[] = [];
+  // Money that only passes through (work expenses and their repayments) is
+  // neither spending nor income.
+  const passThrough = (l: Line) =>
+    l.parentKind === "transfer" && l.categoryId !== null;
   for (const t of txns) {
     const month = t.date.slice(0, 7);
     const parts = byTxn.get(t.id);
@@ -161,5 +165,5 @@ export function loadLines(
       });
     }
   }
-  return out;
+  return out.filter((l) => !passThrough(l));
 }

@@ -6,6 +6,7 @@ import { clearPaydayAction, setPaydayAction } from "@/actions/settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { PaydayConfig, ResolvedPayday } from "@/lib/budget/types";
+import { LOCALE } from "@/lib/locale";
 
 type Schedule = PaydayConfig["schedule"];
 
@@ -17,7 +18,7 @@ const SCHEDULES: { value: Schedule; label: string }[] = [
 ];
 
 const longDate = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     day: "numeric",
     year: "numeric",

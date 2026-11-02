@@ -6,6 +6,7 @@ import { completeWeeklyReview } from "@/actions/weekly";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { addDays } from "@/lib/dates";
+import { LOCALE } from "@/lib/locale";
 import type { WeeklyPage } from "@/lib/ritual/types";
 import { STEP_COUNT, StepRail } from "./StepRail";
 import {
@@ -18,7 +19,7 @@ import {
 } from "./steps";
 
 const shortDate = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     day: "numeric",
   });

@@ -7,11 +7,12 @@ import { AmountText } from "@/components/finance/AmountText";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { LOCALE, MONEY_PLACEHOLDER } from "@/lib/locale";
 import { formatCents, parseAmountToCents } from "@/lib/money";
 import type { AccountBalance } from "@/lib/networth/types";
 
 const longDate = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -112,7 +113,7 @@ function AccountRow({
           <Input
             id={`nw-amount-${account.id}`}
             inputMode="decimal"
-            placeholder="$0.00"
+            placeholder={MONEY_PLACEHOLDER}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className="w-28"

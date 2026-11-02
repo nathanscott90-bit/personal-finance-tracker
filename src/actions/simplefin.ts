@@ -4,6 +4,7 @@ import { z } from "zod";
 import { guessAccountType } from "@/lib/accounts/type-guess";
 import { getDb } from "@/lib/db/client";
 import { accounts } from "@/lib/db/schema";
+import { CURRENCY } from "@/lib/locale";
 import { claimAccessUrl } from "@/lib/simplefin/client";
 import {
   clearConnection,
@@ -103,8 +104,11 @@ export async function mapAccountAction(
   if (p.data.accountId === "create") {
     const linked = listLinkedAccounts(db).find((a) => a.sfinId === sfinId);
     if (!linked) return { ok: false, error: "Unknown SimpleFIN account." };
-    if (linked.currency !== "USD")
-      return { ok: false, error: "Only USD accounts can be synced." };
+    if (linked.currency !== "USD" && linked.currency !== CURRENCY)
+      return {
+        ok: false,
+        error: `Only ${CURRENCY} accounts can be synced.`,
+      };
     const [created] = db
       .insert(accounts)
       .values({

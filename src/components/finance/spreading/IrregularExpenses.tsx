@@ -13,6 +13,7 @@ import { CategoryChip } from "@/components/finance/CategoryChip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PARENT_COLORS } from "@/lib/categories/palette";
+import { MONEY_PLACEHOLDER } from "@/lib/locale";
 import { formatCents, parseAmountToCents } from "@/lib/money";
 import type { Every, IrregularItem } from "@/lib/spreading/types";
 
@@ -119,7 +120,7 @@ function PlannedFields({
         <Input
           id={`${idPrefix}-amount`}
           inputMode="decimal"
-          placeholder="$0.00"
+          placeholder={MONEY_PLACEHOLDER}
           value={form.amount}
           onChange={(e) => onChange({ amount: e.target.value })}
         />

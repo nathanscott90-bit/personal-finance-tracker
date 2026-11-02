@@ -11,6 +11,7 @@ import { TransactionFilters } from "@/components/finance/TransactionFilters";
 import { TransactionsTable } from "@/components/finance/TransactionsTable";
 import { buttonVariants } from "@/components/ui/button";
 import { isIsoDate } from "@/lib/dates";
+import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 import { parseIdParam } from "@/lib/sqlLike";
 import { LIST_LIMIT, type TxnFilter } from "@/lib/transactions/summary";
@@ -74,14 +75,14 @@ export default async function TransactionsPage({
         <div>
           <h1 className="text-title font-semibold">Transactions</h1>
           <p className="tnum text-caption text-ink-2">
-            {summary.count.toLocaleString("en-US")} transactions · money out{" "}
+            {summary.count.toLocaleString(LOCALE)} transactions · money out{" "}
             {formatCents(summary.spentCents, { sign: "never" })} · money in{" "}
             {formatCents(summary.receivedCents, { sign: "never" })}
           </p>
           {summary.count > rows.length && (
             <p className="tnum text-micro text-ink-3">
-              Showing the most recent {LIST_LIMIT.toLocaleString("en-US")} of{" "}
-              {summary.count.toLocaleString("en-US")}
+              Showing the most recent {LIST_LIMIT.toLocaleString(LOCALE)} of{" "}
+              {summary.count.toLocaleString(LOCALE)}
             </p>
           )}
         </div>

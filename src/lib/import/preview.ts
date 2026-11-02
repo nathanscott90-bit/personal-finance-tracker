@@ -1,7 +1,7 @@
 import Papa from "papaparse";
-import type { DateFormat } from "@/lib/dates";
+import { type DateFormat, isTextMonthDate } from "@/lib/dates";
 import { parseCsv } from "./csv";
-import { detectDateFormat, detectProfile } from "./detect";
+import { DEFAULT_DATE_FORMAT, detectDateFormat, detectProfile } from "./detect";
 import { normalizeRow } from "./normalizeRow";
 import { parseOfx } from "./ofx";
 import { headerSignature } from "./profiles";
@@ -17,12 +17,52 @@ export type PreviewResult = {
   errors: RowError[];
   sampleRaw: RawRow[];
   headerless: boolean;
+  /** Preamble lines skipped above the header (detected or overridden). */
+  skipRows: number;
   outflowCheck: { negativeCount: number; positiveCount: number };
 };
 
 const looksLikeDate = (s: string) =>
   /^\s*"?\d{1,4}[/\-.]\d{1,2}[/\-.]\d{1,4}"?\s*$/.test(s) ||
-  /^\s*"?\d{8}"?\s*$/.test(s);
+  /^\s*"?\d{8}"?\s*$/.test(s) ||
+  isTextMonthDate(s.trim().replace(/^"|"$/g, ""));
+
+const MAX_PREAMBLE = 15;
+
+function cells(line: string): string[] {
+  return (Papa.parse<string[]>(line, { header: false }).data[0] ?? []).map(
+    (c) => String(c ?? "").trim(),
+  );
+}
+
+/**
+ * How many lines of preamble sit above the column header. Some UK banks
+ * (Nationwide) put the account name and balances on the first few lines.
+ * A line whose cells match a known profile wins; otherwise the first line
+ * with three or more filled cells that is followed by a dated row.
+ */
+export function detectHeaderRow(text: string, profiles: BankProfile[]): number {
+  const lines = text.split(/\r?\n/).slice(0, MAX_PREAMBLE + 2);
+  const firstFilled = lines.findIndex((l) => l.trim() !== "");
+  if (firstFilled < 0) return 0;
+  if (detectProfile(cells(lines[firstFilled]), profiles)) return firstFilled;
+  for (let i = 0; i <= MAX_PREAMBLE && i < lines.length; i++) {
+    if (lines[i].trim() === "") continue;
+    if (detectProfile(cells(lines[i]), profiles)) return i;
+  }
+  const first = cells(lines[firstFilled]).filter(Boolean);
+  if (first.length >= 3) return firstFilled;
+  for (
+    let i = firstFilled + 1;
+    i <= MAX_PREAMBLE && i < lines.length - 1;
+    i++
+  ) {
+    const c = cells(lines[i]).filter(Boolean);
+    const next = lines.slice(i + 1).find((l) => l.trim() !== "");
+    if (c.length >= 3 && next && looksLikeDate(cells(next)[0] ?? "")) return i;
+  }
+  return 0;
+}
 
 export function isOfx(filename: string, text: string): boolean {
   return (
@@ -65,11 +105,12 @@ export function buildPreview(
       errors: [],
       sampleRaw: [],
       headerless: false,
+      skipRows: 0,
       outflowCheck: outflowCheck(rows),
     };
   }
 
-  const skip = override?.skipRows ?? 0;
+  const skip = override?.skipRows ?? detectHeaderRow(text, profiles);
   const body = skip > 0 ? text.split(/\r?\n/).slice(skip).join("\n") : text;
   const firstLine = body.split(/\r?\n/).find((l) => l.trim() !== "") ?? "";
   const firstCell = firstLine.split(",")[0] ?? "";
@@ -95,13 +136,14 @@ export function buildPreview(
       debitCol: null,
       creditCol: null,
       balanceCol: null,
-      dateFormat: "MDY",
+      dateFormat: DEFAULT_DATE_FORMAT,
       signConvention: "outflow_negative",
-      skipRows: 0,
+      skipRows: skip,
       builtin: false,
     };
     profile = {
       ...base,
+      skipRows: skip,
       ...override,
       headerSignature: headerSignature(headers),
       builtin: false,
@@ -114,22 +156,30 @@ export function buildPreview(
       headers,
       profile: null,
       detectedProfile: false,
-      dateFormat: { format: "MDY", ambiguous: true },
+      dateFormat: { format: DEFAULT_DATE_FORMAT, ambiguous: true },
       rows: [],
       errors: [],
       sampleRaw: raw.slice(0, 20),
       headerless,
+      skipRows: skip,
       outflowCheck: { negativeCount: 0, positiveCount: 0 },
     };
   }
 
   const dateFormat =
-    profile.builtin && !override?.dateFormat
-      ? { format: profile.dateFormat, ambiguous: false }
+    (profile.builtin || detected?.builtin) && !override?.dateFormat
+      ? {
+          format: (detected ?? profile).dateFormat,
+          ambiguous: false,
+        }
       : override?.dateFormat
         ? { format: override.dateFormat, ambiguous: false }
         : detectDateFormat(raw.map((r) => r[profile.dateCol] ?? ""));
-  const effective = { ...profile, dateFormat: dateFormat.format };
+  const effective = {
+    ...profile,
+    dateFormat: dateFormat.format,
+    skipRows: skip,
+  };
 
   const rows: ParsedRow[] = [];
   const errors: RowError[] = [];
@@ -149,6 +199,7 @@ export function buildPreview(
     errors,
     sampleRaw: raw.slice(0, 20),
     headerless,
+    skipRows: skip,
     outflowCheck: outflowCheck(rows),
   };
 }

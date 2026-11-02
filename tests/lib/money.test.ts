@@ -6,10 +6,18 @@ describe("parseAmountToCents", () => {
     ["1,234.56", 123456],
     ["-42.10", -4210],
     ["(42.10)", -4210],
-    ["$12", 1200],
+    ["£12", 1200],
     ["−5", -500],
     ["0.1", 10],
     ["  7.005 ", 701],
+    ["$12", 1200],
+    ["£1,234.56", 123456],
+    ["-£42.10", -4210],
+    ["Â£9.99", 999],
+    ["GBP 5.00", 500],
+    ["12.34 CR", 1234],
+    ["12.34 DR", -1234],
+    ["12.34-", -1234],
   ])("parses %s", (raw, cents) => expect(parseAmountToCents(raw)).toBe(cents));
   it("returns null for junk", () => {
     expect(parseAmountToCents("")).toBeNull();
@@ -19,13 +27,13 @@ describe("parseAmountToCents", () => {
 
 describe("formatCents", () => {
   it("negatives use a true minus", () =>
-    expect(formatCents(-4210)).toBe("−$42.10"));
+    expect(formatCents(-4210)).toBe("−£42.10"));
   it("positives have no sign by default", () =>
-    expect(formatCents(124000)).toBe("$1,240.00"));
+    expect(formatCents(124000)).toBe("£1,240.00"));
   it("positives get plus when asked", () =>
-    expect(formatCents(124000, { sign: "always" })).toBe("+$1,240.00"));
+    expect(formatCents(124000, { sign: "always" })).toBe("+£1,240.00"));
   it("never shows sign when told", () =>
-    expect(formatCents(-5, { sign: "never" })).toBe("$0.05"));
+    expect(formatCents(-5, { sign: "never" })).toBe("£0.05"));
 });
 
 describe("sumCents", () => {

@@ -4,6 +4,7 @@ import { getAlerts } from "@/actions/alerts";
 import { upcomingBills } from "@/actions/bills";
 import { getBudgetPage } from "@/actions/budget";
 import { getForecast } from "@/actions/forecast";
+import { getFunding } from "@/actions/funding";
 import { getInsights } from "@/actions/insights";
 import { getConnectionAction } from "@/actions/simplefin";
 import { getReviewStatusAction } from "@/actions/weekly";
@@ -11,17 +12,19 @@ import { AmountText } from "@/components/finance/AmountText";
 import { AlertList } from "@/components/finance/alerts/AlertList";
 import { SafeToSpendCard } from "@/components/finance/budget/SafeToSpendCard";
 import { DeltaCaption } from "@/components/finance/DeltaCaption";
+import { FundingCard } from "@/components/finance/funding/FundingCard";
 import { WeeklyReviewCard } from "@/components/finance/ritual/WeeklyReviewCard";
 import { SyncButton } from "@/components/finance/simplefin/SyncButton";
 import { SyncNudge } from "@/components/finance/simplefin/SyncNudge";
 import { Card } from "@/components/ui/card";
 import { getDb } from "@/lib/db/client";
+import { LOCALE } from "@/lib/locale";
 import { queueCount } from "@/lib/review/queue";
 import { syncCaption } from "@/lib/simplefin/stale";
 import { groupTransactionsHref } from "@/lib/transactions/links";
 
 const monthLabel = (m: string) =>
-  new Date(`${m}-15T00:00:00`).toLocaleDateString("en-US", { month: "long" });
+  new Date(`${m}-15T00:00:00`).toLocaleDateString(LOCALE, { month: "long" });
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +63,7 @@ export default async function HomePage() {
       ? { cents: forecast.lowestCents, date: forecast.lowestDate }
       : undefined;
   const reviewStatus = await getReviewStatusAction();
+  const funding = await getFunding();
   const { anomalies, dismissedKeys } = await getAlerts();
   const topCategories = insights.breakdown
     .filter((r): r is typeof r & { id: number } => r.id !== null)
@@ -92,6 +96,7 @@ export default async function HomePage() {
       </div>
       <SyncNudge shouldAutoSync={connection.shouldAutoSync} />
       <div className="grid grid-cols-12 gap-6">
+        <FundingCard f={funding} className="col-span-12" />
         {!budget.gate.open ? (
           <Card className="col-span-8">
             <h2 className="text-headline font-semibold">

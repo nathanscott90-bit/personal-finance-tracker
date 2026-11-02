@@ -181,6 +181,34 @@ export function ensureDefaultCategories(db: Db): void {
   // takes its leaves with it; a deleted leaf is skipped inside ensureLeaf.
   for (const parent of DEFAULT_CATEGORIES) {
     if (deleted.has(parent.seedKey)) continue;
+    // A group added to the defaults after this database was seeded.
+    if (
+      parent.leaves.length &&
+      !db
+        .select({ id: categories.id })
+        .from(categories)
+        .where(
+          and(eq(categories.name, parent.name), isNull(categories.parentId)),
+        )
+        .get()
+    ) {
+      const maxSort = db
+        .select({ s: categories.sort })
+        .from(categories)
+        .all()
+        .reduce((m, r) => Math.max(m, r.s), 0);
+      db.insert(categories)
+        .values({
+          name: parent.name,
+          seedKey: parent.seedKey,
+          kind: parent.kind,
+          color: parent.color,
+          icon: parent.icon,
+          isFixed: parent.isFixed,
+          sort: maxSort + 1,
+        })
+        .run();
+    }
     for (const leaf of parent.leaves)
       ensureLeaf(db, parent.name, leaf.name, {
         isFixed: leaf.isFixed ?? parent.isFixed,

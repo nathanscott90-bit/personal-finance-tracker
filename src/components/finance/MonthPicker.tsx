@@ -2,9 +2,10 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { shiftMonth } from "@/lib/insights/page";
+import { LOCALE } from "@/lib/locale";
 
 const label = (m: string) =>
-  new Date(`${m}-15T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${m}-15T00:00:00`).toLocaleDateString(LOCALE, {
     month: "long",
     year: "numeric",
   });

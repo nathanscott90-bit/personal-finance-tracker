@@ -47,7 +47,7 @@ describe("topMerchants", () => {
     expect(dd).toMatchObject({
       totalCents: 3000,
       count: 3,
-      phrase: "$30.00 at DoorDash across 3 purchases",
+      phrase: "£30.00 at DoorDash across 3 purchases",
     });
   });
   it("counts a split transaction once, not once per split line", () => {
@@ -65,10 +65,10 @@ describe("topMerchants", () => {
   });
   it("phrases singular and plural", () => {
     expect(merchantPhrase(1234, "Shop", 1)).toBe(
-      "$12.34 at Shop across 1 purchase",
+      "£12.34 at Shop across 1 purchase",
     );
     expect(merchantPhrase(100, "Shop", 2)).toBe(
-      "$1.00 at Shop across 2 purchases",
+      "£1.00 at Shop across 2 purchases",
     );
   });
 });

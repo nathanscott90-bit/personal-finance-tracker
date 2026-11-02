@@ -10,6 +10,7 @@ export const PARENT_KEYS = [
   "gifts",
   "debt",
   "savings",
+  "work",
   "transfer",
   "uncategorized",
 ] as const;
@@ -27,6 +28,7 @@ export const PARENT_COLORS: Record<ParentKey, string> = {
   gifts: "#30B0C7",
   debt: "#A2845E",
   savings: "#00C7BE",
+  work: "#64D2FF",
   transfer: "#8E8E93",
   uncategorized: "#C7C7CC",
 };

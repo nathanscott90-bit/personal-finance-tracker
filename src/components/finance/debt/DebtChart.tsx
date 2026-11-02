@@ -9,12 +9,13 @@ import {
   YAxis,
 } from "recharts";
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
+import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
 
 const MAX_POINTS = 120;
 
 function monthLabel(month: string): string {
-  return new Date(`${month}-15T00:00:00`).toLocaleDateString("en-US", {
+  return new Date(`${month}-15T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     year: "2-digit",
   });

@@ -188,7 +188,7 @@ describe("syncCaption", () => {
         NOW,
       ),
     ).toEqual({
-      text: "Stuck Bank hasn't sent new data since Sep 16 — open Settings",
+      text: "Stuck Bank hasn't sent new data since 16 Sept — open Settings",
       attention: true,
     });
   });

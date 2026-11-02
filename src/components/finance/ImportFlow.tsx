@@ -13,6 +13,7 @@ import { ImportPreview } from "@/components/finance/ImportPreview";
 import { MappingWizard } from "@/components/finance/MappingWizard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { decodeStatement } from "@/lib/import/decode";
 import type { PreviewResult } from "@/lib/import/preview";
 
 type Account = { id: number; name: string; type: string; color: string };
@@ -63,7 +64,7 @@ export function ImportFlow({ accounts }: { accounts: Account[] }) {
       );
       return;
     }
-    const text = await f.text();
+    const text = decodeStatement(await f.arrayBuffer());
     setFile({ name: f.name, text });
     setWizardName(undefined);
     await load(f.name, text);
@@ -152,7 +153,15 @@ export function ImportFlow({ accounts }: { accounts: Account[] }) {
                   ...currentOverride(),
                   name: override?.name ?? preview.profile.name,
                 }
-              : override;
+              : (override ?? {
+                  name: "",
+                  dateCol: preview.headers[0],
+                  descCol: preview.headers[1] ?? preview.headers[0],
+                  amountCol: preview.headers[2] ?? null,
+                  signConvention: "outflow_negative",
+                  dateFormat: preview.dateFormat.format,
+                  skipRows: preview.skipRows,
+                });
             return wizardInitial;
           })()}
           onApply={(o) => {

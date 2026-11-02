@@ -1,4 +1,5 @@
 import { daysBetween, localDay } from "@/lib/dates";
+import { LOCALE } from "@/lib/locale";
 import { relativeSince } from "./relative";
 import type { Connection, LinkedAccount, StaleBank } from "./types";
 
@@ -51,7 +52,7 @@ export function staleBanks(
 
 /** "Sep 16" for a `YYYY-MM-DD` day. */
 export function shortDay(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     day: "numeric",
   });

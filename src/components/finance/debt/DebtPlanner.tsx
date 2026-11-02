@@ -11,11 +11,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { comparisonSentence } from "@/lib/debt/compare";
 import type { DebtPage, DebtResult, DebtRow, Strategy } from "@/lib/debt/types";
+import { LOCALE, MONEY_PLACEHOLDER } from "@/lib/locale";
 import { formatCents, parseAmountToCents } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 function monthLabel(month: string): string {
-  return new Date(`${month}-15T00:00:00`).toLocaleDateString("en-US", {
+  return new Date(`${month}-15T00:00:00`).toLocaleDateString(LOCALE, {
     month: "long",
     year: "numeric",
   });
@@ -83,7 +84,7 @@ function ExtraInput({ extraCents }: { extraCents: number }) {
         <Input
           id="debt-extra-input"
           inputMode="decimal"
-          placeholder="$0.00"
+          placeholder={MONEY_PLACEHOLDER}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           className="w-28"
@@ -197,7 +198,7 @@ function DebtTermsRow({ row, result }: { row: DebtRow; result?: DebtResult }) {
         <Input
           id={`debt-min-${row.id}`}
           inputMode="decimal"
-          placeholder="$0.00"
+          placeholder={MONEY_PLACEHOLDER}
           value={minInput}
           onChange={(e) => setMinInput(e.target.value)}
           className="w-24"

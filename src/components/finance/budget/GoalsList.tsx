@@ -13,10 +13,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PARENT_COLORS } from "@/lib/categories/palette";
 import type { Goal } from "@/lib/goals/types";
+import { LOCALE, MONEY_PLACEHOLDER } from "@/lib/locale";
 import { formatCents, parseAmountToCents } from "@/lib/money";
 
 const longDate = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+  new Date(`${iso}T00:00:00`).toLocaleDateString(LOCALE, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -74,7 +75,7 @@ function GoalForm({
         <Input
           id={`${idPrefix}-target`}
           inputMode="decimal"
-          placeholder="$0.00"
+          placeholder={MONEY_PLACEHOLDER}
           value={form.target}
           onChange={(e) => onChange({ target: e.target.value })}
         />
@@ -99,7 +100,7 @@ function GoalForm({
         <Input
           id={`${idPrefix}-starting`}
           inputMode="decimal"
-          placeholder="$0.00"
+          placeholder={MONEY_PLACEHOLDER}
           value={form.starting}
           onChange={(e) => onChange({ starting: e.target.value })}
         />

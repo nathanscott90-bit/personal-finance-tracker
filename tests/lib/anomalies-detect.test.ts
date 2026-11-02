@@ -113,7 +113,7 @@ describe("detectAnomalies: merchant-spike", () => {
     const a = out.find((x) => x.kind === "merchant-spike" && x.txnId === 11);
     expect(a).toBeDefined();
     expect(a?.reason).toMatch(/3\.0×/);
-    expect(a?.reason).toMatch(/\$10\.00/);
+    expect(a?.reason).toMatch(/£10\.00/);
   });
 });
 
@@ -307,7 +307,7 @@ describe("detectAnomalies: new-merchant considers income lines too", () => {
 });
 
 describe("detectAnomalies: new-merchant", () => {
-  it("does not fire at $199", () => {
+  it("does not fire at £199", () => {
     const out = detectAnomalies({
       lines: [
         line({
@@ -324,7 +324,7 @@ describe("detectAnomalies: new-merchant", () => {
     expect(out.some((a) => a.kind === "new-merchant")).toBe(false);
   });
 
-  it("fires at $200 with a fixed reason", () => {
+  it("fires at £200 with a fixed reason", () => {
     const out = detectAnomalies({
       lines: [
         line({
@@ -390,8 +390,8 @@ describe("detectAnomalies: bill-jump", () => {
     });
     const a = out.find((x) => x.kind === "bill-jump" && x.txnId === 701);
     expect(a).toBeDefined();
-    expect(a?.reason).toMatch(/\$116\.00/);
-    expect(a?.reason).toMatch(/\$100\.00/);
+    expect(a?.reason).toMatch(/£116\.00/);
+    expect(a?.reason).toMatch(/£100\.00/);
   });
 });
 
@@ -497,7 +497,7 @@ describe("detectAnomalies: double-charge", () => {
     );
   });
 
-  it("does not fire below the $20 minimum", () => {
+  it("does not fire below the £20 minimum", () => {
     const out = detectAnomalies({
       lines: [
         line({
@@ -520,7 +520,7 @@ describe("detectAnomalies: double-charge", () => {
     expect(out.some((a) => a.kind === "double-charge")).toBe(false);
   });
 
-  it("fires at $25, above the minimum", () => {
+  it("fires at £25, above the minimum", () => {
     const out = detectAnomalies({
       lines: [
         line({
