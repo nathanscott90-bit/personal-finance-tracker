@@ -45,7 +45,7 @@ function budgetFixture(overrides: Partial<BudgetPage> = {}): BudgetPage {
     months: ["2026-09"],
     today,
     isCurrent: true,
-    gate: { open: true, completeMonths: 3, needed: 3 },
+    hasHistory: true,
     hasBudget: true,
     prevHasBudget: true,
     nextHasBudget: false,
@@ -241,23 +241,6 @@ describe("spendRate — fallbacks", () => {
       source: "average",
       thisMonthDailyCents: 1500,
       laterMonthlyCents: 45000,
-    });
-  });
-
-  it("treats a budget with a closed gate the same as no budget", () => {
-    const budget = budgetFixture({
-      gate: { open: false, completeMonths: 1, needed: 3 },
-    });
-    const rate = spendRate({
-      budget,
-      avgVariableCents: 30000,
-      avgUncategorizedCents: null,
-      today,
-    });
-    expect(rate).toEqual({
-      source: "average",
-      thisMonthDailyCents: 1000,
-      laterMonthlyCents: 30000,
     });
   });
 

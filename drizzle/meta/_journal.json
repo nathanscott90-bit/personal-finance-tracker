@@ -85,6 +85,13 @@
       "when": 1788894357292,
       "tag": "0011_household",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1793774107733,
+      "tag": "0012_remove_bank_sync",
+      "breakpoints": true
     }
   ]
 }

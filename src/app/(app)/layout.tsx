@@ -1,7 +1,6 @@
 import { Sidebar } from "@/components/shell/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { currentActor } from "@/lib/audit/request";
-import { budgetGate } from "@/lib/budget/gate";
 import { todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
 import {
@@ -27,14 +26,12 @@ export default async function AppLayout({
   ensurePhase7(db);
   ensurePhase9(db);
   const reviewCount = queueCount(db);
-  const gate = budgetGate(db, todayIso());
   const reviewDue = reviewStatus(listWeekStarts(db), todayIso()).due;
   const actor = await currentActor();
   return (
     <div className="flex min-h-screen">
       <Sidebar
         reviewCount={reviewCount}
-        gate={gate}
         reviewDue={reviewDue}
         actorName={actor.name}
       />

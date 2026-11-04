@@ -4,7 +4,6 @@ import {
   accounts,
   balanceSnapshots,
   rules,
-  simplefinAccounts,
   transactions,
 } from "@/lib/db/schema";
 
@@ -13,8 +12,6 @@ export type AccountDependents = {
   snapshots: number;
   /** User rules scoped to this account. */
   rules: number;
-  /** A SimpleFIN account is mapped to this app account. */
-  linked: boolean;
 };
 
 export type AccountResult = { ok: true } | { ok: false; error: string };
@@ -44,12 +41,6 @@ export function getAccountDependents(db: Db, id: number): AccountDependents {
         .where(eq(rules.accountId, id))
         .get(),
     ),
-    linked:
-      db
-        .select({ id: simplefinAccounts.id })
-        .from(simplefinAccounts)
-        .where(eq(simplefinAccounts.accountId, id))
-        .get() !== undefined,
   };
 }
 
@@ -64,7 +55,6 @@ export function listAccountDependents(db: Db): Map<number, AccountDependents> {
       transactions: 0,
       snapshots: 0,
       rules: 0,
-      linked: false,
     });
   for (const r of db
     .select({ id: transactions.accountId, n: count() })
@@ -90,14 +80,6 @@ export function listAccountDependents(db: Db): Map<number, AccountDependents> {
     .all()) {
     const d = r.id === null ? undefined : deps.get(r.id);
     if (d) d.rules = r.n;
-  }
-  for (const r of db
-    .select({ id: simplefinAccounts.accountId })
-    .from(simplefinAccounts)
-    .where(isNotNull(simplefinAccounts.accountId))
-    .all()) {
-    const d = r.id === null ? undefined : deps.get(r.id);
-    if (d) d.linked = true;
   }
   return deps;
 }

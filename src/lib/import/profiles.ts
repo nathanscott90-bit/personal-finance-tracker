@@ -8,7 +8,8 @@ export function headerSignature(headers: string[]): string {
     .join("|");
 }
 
-const P = (
+/** Builds a profile from a bank's CSV header and column choices. */
+export const defineProfile = (
   name: string,
   headers: string[],
   cols: Partial<BankProfile> &
@@ -32,7 +33,7 @@ const P = (
  * puts account details above the header, which the importer skips by itself.
  */
 export const UK_PROFILES: BankProfile[] = [
-  P(
+  defineProfile(
     "NatWest",
     [
       "Date",
@@ -52,7 +53,7 @@ export const UK_PROFILES: BankProfile[] = [
       dateFormat: "DMY",
     },
   ),
-  P(
+  defineProfile(
     "Nationwide (current account)",
     [
       "Date",
@@ -72,7 +73,7 @@ export const UK_PROFILES: BankProfile[] = [
       dateFormat: "DMY",
     },
   ),
-  P(
+  defineProfile(
     "Nationwide (current account, older export)",
     ["Date", "Transactions", "Credits", "Debits", "Balance"],
     {
@@ -85,7 +86,7 @@ export const UK_PROFILES: BankProfile[] = [
       dateFormat: "DMY",
     },
   ),
-  P(
+  defineProfile(
     "Nationwide (credit card)",
     ["Date", "Transactions", "Location", "Paid out", "Paid in"],
     {
@@ -99,103 +100,5 @@ export const UK_PROFILES: BankProfile[] = [
   ),
 ];
 
-export const BUILTIN_PROFILES: BankProfile[] = [
-  ...UK_PROFILES,
-  P(
-    "Chase (card)",
-    [
-      "Transaction Date",
-      "Post Date",
-      "Description",
-      "Category",
-      "Type",
-      "Amount",
-      "Memo",
-    ],
-    {
-      dateCol: "Transaction Date",
-      descCol: "Description",
-      amountCol: "Amount",
-      signConvention: "outflow_negative",
-    },
-  ),
-  P(
-    "Chase (checking)",
-    [
-      "Details",
-      "Posting Date",
-      "Description",
-      "Amount",
-      "Type",
-      "Balance",
-      "Check or Slip #",
-    ],
-    {
-      dateCol: "Posting Date",
-      descCol: "Description",
-      amountCol: "Amount",
-      balanceCol: "Balance",
-      signConvention: "outflow_negative",
-    },
-  ),
-  P("Bank of America", ["Date", "Description", "Amount", "Running Bal."], {
-    dateCol: "Date",
-    descCol: "Description",
-    amountCol: "Amount",
-    balanceCol: "Running Bal.",
-    signConvention: "outflow_negative",
-  }),
-  P(
-    "Capital One",
-    [
-      "Transaction Date",
-      "Posted Date",
-      "Card No.",
-      "Description",
-      "Category",
-      "Debit",
-      "Credit",
-    ],
-    {
-      dateCol: "Transaction Date",
-      descCol: "Description",
-      debitCol: "Debit",
-      creditCol: "Credit",
-      signConvention: "debit_credit_cols",
-      dateFormat: "YMD",
-    },
-  ),
-  P("American Express", ["Date", "Description", "Amount"], {
-    dateCol: "Date",
-    descCol: "Description",
-    amountCol: "Amount",
-    signConvention: "outflow_positive",
-  }),
-  P(
-    "Discover",
-    ["Trans. Date", "Post Date", "Description", "Amount", "Category"],
-    {
-      dateCol: "Trans. Date",
-      descCol: "Description",
-      amountCol: "Amount",
-      signConvention: "outflow_positive",
-    },
-  ),
-  P(
-    "Citi",
-    ["Status", "Date", "Description", "Debit", "Credit", "Member Name"],
-    {
-      dateCol: "Date",
-      descCol: "Description",
-      debitCol: "Debit",
-      creditCol: "Credit",
-      signConvention: "debit_credit_cols",
-    },
-  ),
-  P("Wells Fargo (headerless)", ["col1", "col2", "col3", "col4", "col5"], {
-    dateCol: "col1",
-    descCol: "col5",
-    amountCol: "col2",
-    signConvention: "outflow_negative",
-  }),
-];
+/** The formats the app recognises by themselves: UK banks. Any other bank is taught once through the mapping wizard. */
+export const BUILTIN_PROFILES: BankProfile[] = [...UK_PROFILES];

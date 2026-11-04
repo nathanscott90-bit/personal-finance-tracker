@@ -7,18 +7,18 @@ payoff, a cash-flow forecast and alerts. Both of you use it from your own
 phones and laptops; it knows whose account is whose and who changed what.
 
 Everything stays on your PC: one SQLite file, no cloud service, no account.
-The only things that leave the machine are read-only bank access (Enable
-Banking), phone alerts (ntfy), encrypted backups to a folder you choose, and,
-only if you turn it on, summaries you let Claude read.
+The only things that leave the machine are phone alerts (ntfy), encrypted
+backups to a folder you choose, and, only if you turn it on, summaries you let
+Claude read. Your bank login is never used by the app.
 
 **Setting it up on Windows:** see [SETUP-UK.md](SETUP-UK.md). For phones,
-the wall display and backups: [docs/HOUSEHOLD.md](docs/HOUSEHOLD.md).
+and backups: [docs/HOUSEHOLD.md](docs/HOUSEHOLD.md).
 
 ## What it does
 
 | Area | What you get |
 |---|---|
-| Bank data | Daily sync from NatWest, Nationwide and other UK banks via Enable Banking; CSV/OFX import as a fallback, with automatic bank detection, de-duplication and undo |
+| Bank data | **Bank download**: Chrome opens at NatWest and Nationwide, you log in yourself, and each CSV/OFX you download is imported automatically (profile detection, de-duplication, undo). Statements can also be dropped on the Import page |
 | Cleanup | Merchant clean-up, transfer detection between your own accounts, rules, refund matching, splits, a review queue |
 | Two people | Each account marked **joint** or one person's own; a **whose money** filter on Transactions and Insights; an activity log of who changed what |
 | Spending | Insights by category and merchant, month against average, cash-flow waterfall |
@@ -36,7 +36,8 @@ Requires Node 24, then `npm install`.
 |---|---|
 | `npm run app` | Builds if needed, serves on `127.0.0.1:3000` and opens a desktop-style window |
 | `npm run dev` | Development server with hot reload |
-| `npm run daily` | The unattended job: bank sync, alerts, off-PC backup (scheduled by setup) |
+| `npm run bank` | Opens Chrome at your banks; imports each statement you download (the "Bank download" desktop shortcut) |
+| `npm run daily` | The unattended job: alerts, weekly download reminder, off-PC backup (scheduled by setup) |
 | `npm run backup` | Snapshot into `data/backups/` |
 | `npm run restore -- <file.finbak> [--replace]` | Decrypt an off-PC backup |
 | `npm run seed` | **Wipes** the dev database and generates 3 months of fake data |
@@ -61,10 +62,10 @@ your tailnet, and tells the app which of you is asking. Do not expose port
 
 [CONTRIBUTING.md](CONTRIBUTING.md) and
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) map the code;
-[docs/PLAN.md](docs/PLAN.md) is the original design. US banks are still
-supported (Chase, Bank of America, Wells Fargo, Capital One, Amex, Discover,
-Citi profiles, and SimpleFIN sync when the locale is en-US). Never post real
-bank data in issues or pull requests.
+[docs/PLAN.md](docs/PLAN.md) is the original design. Only UK bank formats
+(NatWest, Nationwide) are recognised automatically; any other bank is taught
+once through the column-mapping step on the Import page. Never post real bank
+data in issues or pull requests.
 
 ## License
 

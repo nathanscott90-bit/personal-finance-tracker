@@ -83,15 +83,13 @@ export async function getWeeklyPage(): Promise<WeeklyPage> {
 export async function completeWeeklyReview(): Promise<{
   ok: true;
   weekStart: string;
-  streak: number;
 }> {
   const db = getDb();
   const today = todayIso();
   const { weekStart } = completeWeek(db, today);
-  const streak = reviewStatus(listWeekStarts(db), today).streak;
   await audit("Completed weekly review", `Week of ${weekStart}`);
   refresh();
-  return { ok: true, weekStart, streak };
+  return { ok: true, weekStart };
 }
 
 export async function getReviewStatusAction(): Promise<ReviewStatus> {

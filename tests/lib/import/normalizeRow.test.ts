@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { normalizeRow } from "@/lib/import/normalizeRow";
-import { BUILTIN_PROFILES } from "@/lib/import/profiles";
 import { mustFind } from "../../helpers";
+import { TEST_PROFILES } from "../../profiles";
 
 const by = (n: string) =>
-  mustFind(BUILTIN_PROFILES, (p) => p.name === n, `the ${n} profile`);
+  mustFind(TEST_PROFILES, (p) => p.name === n, `the ${n} profile`);
 
 describe("normalizeRow", () => {
   it("outflow_negative keeps sign", () => {

@@ -1,6 +1,5 @@
 import { getBudgetSetup } from "@/actions/budget";
 import { BudgetSetup } from "@/components/finance/budget/BudgetSetup";
-import { LockedCard } from "@/components/finance/budget/LockedCard";
 import { LOCALE } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +17,6 @@ export default async function BudgetSetupPage({
 }) {
   const { month } = await searchParams;
   const s = await getBudgetSetup(month);
-  if (!s.gate.open) return <LockedCard gate={s.gate} />;
   return (
     <>
       <div className="mb-6">
@@ -26,8 +24,9 @@ export default async function BudgetSetupPage({
           Set up {monthLabel(s.month)}
         </h1>
         <p className="mt-1 text-caption text-ink-2">
-          Prefilled from your last {s.avgMonths} complete month
-          {s.avgMonths === 1 ? "" : "s"}
+          {s.avgMonths === 0
+            ? "No finished month of data yet, so the amounts start at zero."
+            : `Prefilled from your last ${s.avgMonths} complete month${s.avgMonths === 1 ? "" : "s"}`}
         </p>
       </div>
       <BudgetSetup setup={s} />

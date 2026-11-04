@@ -39,7 +39,6 @@ export async function listAccounts() {
       transactions: 0,
       snapshots: 0,
       rules: 0,
-      linked: false,
     };
     return { ...a, txnCount: dependents.transactions, dependents };
   });

@@ -60,8 +60,8 @@ export function MappingWizard({ headers, sample, initial, onApply }: Props) {
   return (
     <div className="grid gap-5">
       <p className="text-body text-ink-2">
-        We don't recognize this bank yet. Tell us which column is which and
-        we'll remember it.
+        This bank's file format is not recognised yet. Choose which column is
+        which and the app will remember it.
       </p>
       <div className="grid grid-cols-2 gap-4">
         <label

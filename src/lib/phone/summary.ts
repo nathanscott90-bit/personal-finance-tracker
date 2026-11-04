@@ -1,8 +1,8 @@
 import { desc } from "drizzle-orm";
+import { dataAgeDays } from "@/lib/bankfetch/freshness";
 import { addDays, daysBetween } from "@/lib/dates";
 import type { Db } from "@/lib/db/client";
 import { accounts, balanceSnapshots, categories } from "@/lib/db/schema";
-import { getEbStatus, getSessions } from "@/lib/enablebanking/store";
 import {
   billAccounts,
   type FundingPage,
@@ -31,8 +31,8 @@ export type PhoneSummary = {
     date: string;
     type: string;
   }[];
-  lastSyncAt: string | null;
-  banksConnected: boolean;
+  /** Days since the app last had bank data; null when it has none. */
+  dataAgeDays: number | null;
   month: {
     label: string;
     billsDiffCents: number | null;
@@ -52,20 +52,6 @@ export function phoneSummary(db: Db, today: string): PhoneSummary {
   const accts = db.select().from(accounts).all();
   const nameOf = new Map(accts.map((a) => [a.id, a.name]));
 
-  const sessions = getSessions(db);
-  const status = getEbStatus(db);
-  const now = new Date(`${today}T12:00:00`);
-  const expiring = sessions
-    .filter(
-      (s) =>
-        s.validUntil &&
-        new Date(s.validUntil).getTime() - now.getTime() < 14 * 86_400_000,
-    )
-    .map((s) => ({
-      bank: s.bank,
-      validUntil: s.validUntil,
-      expired: new Date(s.validUntil) <= now,
-    }));
   const cfg = getNotifyConfig(db);
   const check = monthlyCheck(db, today);
   // The phone view always shows the next transfer, not only in the run-up.
@@ -74,9 +60,7 @@ export function phoneSummary(db: Db, today: string): PhoneSummary {
     funding,
     settings: { ...cfg, reminderDays: 31 },
     billChanges: [],
-    expiring,
-    syncError: status.lastError,
-    lastGoodSyncAt: status.lastSyncAt,
+    dataAgeDays: dataAgeDays(db, today),
   })
     .concat(
       // Only what's live now; the month-end summary lives on the check page.
@@ -143,8 +127,7 @@ export function phoneSummary(db: Db, today: string): PhoneSummary {
     actions,
     upcoming,
     balances,
-    lastSyncAt: status.lastSyncAt,
-    banksConnected: sessions.length > 0,
+    dataAgeDays: dataAgeDays(db, today),
     month: check.ready
       ? {
           label: check.lastLabel,

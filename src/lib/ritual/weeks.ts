@@ -10,18 +10,6 @@ export function weekStart(iso: string): string {
   return addDays(iso, -dow(iso));
 }
 
-export function streak(weekStarts: string[], today: string): number {
-  const done = new Set(weekStarts);
-  const current = weekStart(today);
-  let w = done.has(current) ? current : addDays(current, -7);
-  let n = 0;
-  while (done.has(w)) {
-    n += 1;
-    w = addDays(w, -7);
-  }
-  return n;
-}
-
 export function reviewStatus(
   rows: { weekStart: string; completedAt: string }[],
   today: string,
@@ -39,10 +27,6 @@ export function reviewStatus(
     lastCompleted: last,
     daysSince,
     due: !doneThisWeek && (daysSince === null || daysSince >= 7),
-    streak: streak(
-      rows.map((r) => r.weekStart),
-      today,
-    ),
     currentWeekStart,
   };
 }

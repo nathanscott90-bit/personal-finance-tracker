@@ -97,12 +97,10 @@ export function AlertList({
 
   if (anomalies.length === 0) {
     return bare ? (
-      <div className="py-8 text-center text-ink-2">
-        Nothing worth a look right now.
-      </div>
+      <div className="py-8 text-center text-ink-2">No alerts.</div>
     ) : (
       <div className="rounded-card bg-card p-8 text-center text-ink-2 shadow-card">
-        Nothing worth a look right now.
+        No alerts.
       </div>
     );
   }

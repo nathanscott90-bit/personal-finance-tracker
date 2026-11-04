@@ -4,7 +4,6 @@ import {
   BudgetTable,
   CopyLastMonthButton,
 } from "@/components/finance/budget/BudgetTable";
-import { LockedCard } from "@/components/finance/budget/LockedCard";
 import { MonthPicker } from "@/components/finance/MonthPicker";
 import { Card } from "@/components/ui/card";
 import { LOCALE } from "@/lib/locale";
@@ -20,9 +19,11 @@ const monthLabel = (m: string) =>
 function SetupCard({
   month,
   prevHasBudget,
+  hasHistory,
 }: {
   month: string;
   prevHasBudget: boolean;
+  hasHistory: boolean;
 }) {
   return (
     <Card>
@@ -30,12 +31,19 @@ function SetupCard({
       <p className="text-body text-ink-2">
         No budget for {monthLabel(month)} yet.
       </p>
+      {!hasHistory && (
+        <p className="mt-2 text-caption text-ink-2">
+          There is no finished month of data yet, so the amounts start at zero.
+          Fill them in by hand, or bring in more statements first (Settings →
+          Bank download).
+        </p>
+      )}
       <div className="mt-4 flex items-center gap-3">
         <Link
           href={`/budget/setup?month=${month}`}
           className="inline-block rounded-control bg-accent px-5 py-2.5 text-body font-medium text-white"
         >
-          Start from your averages
+          {hasHistory ? "Start from your averages" : "Set up a budget"}
         </Link>
         {prevHasBudget && <CopyLastMonthButton month={month} />}
       </div>
@@ -50,9 +58,14 @@ export default async function BudgetPage({
 }) {
   const { month } = await searchParams;
   const p = await getBudgetPage(month);
-  if (!p.gate.open) return <LockedCard gate={p.gate} />;
   if (!p.hasBudget)
-    return <SetupCard month={p.month} prevHasBudget={p.prevHasBudget} />;
+    return (
+      <SetupCard
+        month={p.month}
+        prevHasBudget={p.prevHasBudget}
+        hasHistory={p.hasHistory}
+      />
+    );
   return (
     <>
       <div className="mb-6 flex items-end justify-between">

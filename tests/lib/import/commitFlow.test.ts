@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { openDb } from "@/lib/db/client";
 import { accounts, bankProfiles, transactions } from "@/lib/db/schema";
 import { type CommitFlowDeps, runCommitFlow } from "@/lib/import/commitFlow";
-import { BUILTIN_PROFILES } from "@/lib/import/profiles";
+import { TEST_PROFILES } from "../../profiles";
 
 /** A file whose header signature matches the builtin "Chase (card)" profile. */
 const CHASE_CSV = [
@@ -30,7 +30,7 @@ function setup() {
     .all();
   const deps: CommitFlowDeps = {
     backup: () => "data/backups/finance-20260305-120000.db",
-    builtins: BUILTIN_PROFILES,
+    builtins: TEST_PROFILES,
   };
   return { db, acct, deps };
 }

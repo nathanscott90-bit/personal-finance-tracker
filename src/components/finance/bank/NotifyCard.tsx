@@ -38,8 +38,8 @@ export function NotifyCard({
       <h2 className="mb-1 text-headline font-semibold">Phone alerts</h2>
       <p className="mb-3 text-caption text-ink-2">
         The app messages you only when something needs doing: the payday
-        transfer, a shortfall, a bill that's missing or has gone up, or a bank
-        connection to renew.
+        transfer, a shortfall, a bill that's missing or has gone up, or a
+        reminder to download your bank data.
       </p>
       <ol className="mb-4 ml-5 list-decimal space-y-1 text-caption text-ink-2">
         <li>

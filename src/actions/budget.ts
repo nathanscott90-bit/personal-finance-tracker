@@ -3,7 +3,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { categoryLabel } from "@/lib/audit/describe";
 import { audit } from "@/lib/audit/request";
-import { budgetGate } from "@/lib/budget/gate";
 import { setupDefaults } from "@/lib/budget/setup";
 import {
   copyBudgetMonth,
@@ -13,7 +12,7 @@ import {
   setBudgetRow,
   validBudgetRows,
 } from "@/lib/budget/store";
-import type { BudgetPage, Gate, SetupPage } from "@/lib/budget/types";
+import type { BudgetPage, SetupPage } from "@/lib/budget/types";
 import { setCategoryRollover as setCategoryRolloverStore } from "@/lib/categories/manage";
 import { todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
@@ -44,9 +43,7 @@ export async function getBudgetPage(month?: string): Promise<BudgetPage> {
   return cachedBudgetPage(todayIso(), resolveMonth(month));
 }
 
-export async function getBudgetSetup(
-  month?: string,
-): Promise<SetupPage & { gate: Gate }> {
+export async function getBudgetSetup(month?: string): Promise<SetupPage> {
   const db = getDb();
   const today = todayIso();
   const m = resolveMonth(month);
@@ -54,7 +51,6 @@ export async function getBudgetSetup(
   const lines = cachedLines();
   const leaves = listBudgetLeaves(db);
   const { bills, expectedIncomeMonthlyCents } = cachedBills(today);
-  const gate = budgetGate(db, today);
   const avgWindow = completeMonths(dataMonths(lines), current)
     .filter((mo) => mo < m)
     .slice(-3);
@@ -71,7 +67,7 @@ export async function getBudgetSetup(
     goalNeeded,
     expectedIncomeFallback: expectedIncomeMonthlyCents,
   });
-  return { ...page, gate };
+  return page;
 }
 
 const saveBudgetSchema = z.object({

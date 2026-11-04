@@ -54,3 +54,21 @@ applications in the Cloudflare dashboard, and uninstall `cloudflared`
   and logged under the right names.
 - Not tested here: Tailscale Serve itself and the Windows setup script, which
   need your PC and tailnet.
+
+## Clean-up release
+
+- **Bank download** replaces the automatic bank link, which does not cover UK
+  banks. See docs/BANK-DOWNLOAD.md.
+- **Nothing greyed out.** Budget and Goals are always open; with no finished
+  month of data yet they say so in plain words.
+- **No streak counter** or chirpy wording.
+- **Shorter menu** (15 to 11): *To do* holds Review, Weekly review and Monthly
+  check; *Budget* holds Goals; *Net worth* holds Debt. Each is a tab bar on the
+  same pages, so nothing was removed and old links still work.
+- **Removed:** US bank sync (SimpleFIN), the Enable Banking link, the wall
+  display and its token, and the US bank file formats (other banks still import
+  through the column-mapping step).
+- **Database:** migration 0012 drops the unused SimpleFIN table and deletes the
+  saved settings of the removed features, including any stored Enable Banking
+  key. Your accounts, transactions and everything else are untouched. Take a
+  backup first (Settings, Off-PC backup, Back up now) as usual.

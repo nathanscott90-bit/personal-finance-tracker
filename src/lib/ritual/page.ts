@@ -67,27 +67,26 @@ export function buildWeeklyPage(i: {
   alertCount: number;
 }): WeeklyPage {
   const month = i.today.slice(0, 7);
-  const p =
-    i.budget.gate.open && i.budget.hasBudget
+  const p = i.budget.hasBudget
+    ? pace({
+        spentCents: i.budget.spentCents,
+        referenceCents: i.budget.budgetedCents,
+        today: i.today,
+        reference: "budget",
+      })
+    : i.avgSpend !== null && i.avgSpend > 0
       ? pace({
-          spentCents: i.budget.spentCents,
-          referenceCents: i.budget.budgetedCents,
+          spentCents: i.insightsSpent,
+          referenceCents: i.avgSpend,
           today: i.today,
-          reference: "budget",
+          reference: "average",
         })
-      : i.avgSpend !== null && i.avgSpend > 0
-        ? pace({
-            spentCents: i.insightsSpent,
-            referenceCents: i.avgSpend,
-            today: i.today,
-            reference: "average",
-          })
-        : pace({
-            spentCents: 0,
-            referenceCents: 0,
-            today: i.today,
-            reference: "none",
-          });
+      : pace({
+          spentCents: 0,
+          referenceCents: 0,
+          today: i.today,
+          reference: "none",
+        });
 
   const leaves = i.budget.groups.flatMap((g) => g.leaves);
   const overspent = leaves
@@ -108,7 +107,6 @@ export function buildWeeklyPage(i: {
     pace: p,
     overspent,
     warn,
-    gateOpen: i.budget.gate.open,
     hasBudget: i.budget.hasBudget,
     bills: buildBills(i.bills, i.today),
     budgetLeftToAssign: i.budget.hasBudget ? i.budget.leftToAssignCents : null,

@@ -1,7 +1,7 @@
 # Household access
 
 How both of you use the app from your own phones and laptops, how it knows
-which of you made a change, how a wall display reads it, and how the data is
+which of you made a change, and how the data is
 kept safe if the PC dies.
 
 **The shape of it.** The app runs on the desktop PC and only listens on
@@ -67,85 +67,7 @@ could, so treat the log as a household convenience, not a security control.
 Both of you can see and change everything; there are no per-person
 permissions.
 
-## 4. Wall display (optional)
-
-A kiosk browser cannot sign in to anything, so `/wall` and `/api/wall` are
-guarded by a **display token** instead.
-
-1. The display device needs Tailscale too (a spare tablet or a Raspberry Pi
-   signed in to your tailnet; a tagged device is fine).
-2. **Settings → Wall display → Generate token**. The token and an enrollment
-   link are shown **once**. If the link says `localhost`, swap that part for
-   your `https://<pc>.<tailnet>.ts.net` address and keep `?token=…` as is.
-3. Open the link once in the display's browser. It sets a long-lived,
-   httpOnly cookie and lands on `/wall`, which refreshes every 5 minutes.
-4. Clear the kiosk browser's history afterwards (the link contains the
-   token), or rotate the token if the link was shared.
-
-**Rotate** issues a new token and cuts off every enrolled display and the
-hub; re-enrol them. **Revoke** cuts them off with no replacement.
-
-## 5. The hub contract
-
-A separate dashboard can read one endpoint, server-side, from a machine on
-your tailnet:
-
-```
-GET https://<pc>.<tailnet>.ts.net/api/wall
-Authorization: Bearer <the display token>
-```
-
-- `200` with the JSON below, `Cache-Control: no-store`.
-- `401` `{ "ok": false, "error": "Not enrolled." }` when the token is missing
-  or wrong.
-- Poll every **60–300 seconds**. There is no push and no CORS header: call it
-  from the hub's server, not from its browser code.
-- Keep the token in the hub's secret store.
-
-The payload (the `WallSummary` type in `src/lib/wall/types.ts`; integer cents,
-dates `YYYY-MM-DD`):
-
-```ts
-type WallSummary = {
-  generatedAt: string; // ISO time
-  today: string; // YYYY-MM-DD
-  gateOpen: boolean; // the budget gate: false until 2 complete months of data
-  safeToSpend: {
-    perDayCents: number;
-    totalCents: number;
-    untilDate: string; // next payday or month end
-    horizonLabel: "until payday" | "until month end";
-  } | null;
-  bills: {
-    due: {
-      name: string;
-      cents: number;
-      expectedDate: string;
-      overdue: boolean;
-      categoryColor: string | null;
-    }[];
-    dueTotalCents: number;
-  };
-  review: { count: number; streakWeeks: number; weeklyDue: boolean };
-  budget: {
-    month: string;
-    spentCents: number;
-    budgetedCents: number;
-    elapsedShare: number;
-  } | null;
-  nextPlanned: { name: string; cents: number; date: string } | null;
-  alerts: { count: number };
-};
-```
-
-`safeToSpend` and `budget` are `null` while the budget gate is closed or the
-month has no budget; `gateOpen` tells the two apart, so a display can say
-"unlocks after 2 months of data" rather than "no budget this month". Every number comes from the same loaders the app's own
-Home, Budget, Bills and weekly review screens use, so the wall can never
-disagree with the app. No transactions, balances or account names are exposed;
-bill `name`s are merchant names.
-
-## 6. Backups
+## 4. Backups
 
 Two layers, both automatic once set up:
 
@@ -178,7 +100,7 @@ first, then swaps the restored one in. The passphrase can also come from
 `-wal` and `-shm` files open while the app runs; a sync client copying them
 mid-write corrupts the database. Sync the encrypted backups only.
 
-## 7. Without Tailscale
+## 5. Without Tailscale
 
 To serve the home network directly instead, start the app with
 `FINANCE_HOST=0.0.0.0` (launcher) or `-H 0.0.0.0` (task) and allow port 3000

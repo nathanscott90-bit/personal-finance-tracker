@@ -9,7 +9,6 @@ import {
   balanceSnapshots,
   categories,
   rules,
-  simplefinAccounts,
   transactions,
 } from "@/lib/db/schema";
 
@@ -69,21 +68,15 @@ describe("getAccountDependents", () => {
         { pattern: "heb", categoryId: cat.id, accountId: null },
       ])
       .run();
-    db.insert(simplefinAccounts)
-      .values({ sfinId: "ACT-1", name: "Chk", accountId: b.id })
-      .run();
-
     expect(getAccountDependents(db, a.id)).toEqual({
       transactions: 1,
       snapshots: 2,
       rules: 1,
-      linked: false,
     });
     expect(getAccountDependents(db, b.id)).toEqual({
       transactions: 1,
       snapshots: 1,
       rules: 0,
-      linked: true,
     });
   });
 
@@ -93,7 +86,6 @@ describe("getAccountDependents", () => {
       transactions: 0,
       snapshots: 0,
       rules: 0,
-      linked: false,
     });
   });
 });
@@ -146,13 +138,6 @@ describe("listAccountDependents", () => {
         { pattern: "heb", categoryId: cat.id, accountId: null },
       ])
       .run();
-    db.insert(simplefinAccounts)
-      .values([
-        { sfinId: "ACT-1", name: "Chk", accountId: b.id },
-        { sfinId: "ACT-2", name: "Unmapped", accountId: null },
-      ])
-      .run();
-
     const map = listAccountDependents(db);
     expect([...map.keys()].sort((x, y) => x - y)).toEqual([a.id, b.id, c.id]);
     for (const id of [a.id, b.id, c.id])
@@ -165,13 +150,11 @@ describe("listAccountDependents", () => {
       transactions: 0,
       snapshots: 0,
       rules: 0,
-      linked: false,
     });
     expect(listAccountDependents(db).get(b.id)).toEqual({
       transactions: 0,
       snapshots: 0,
       rules: 0,
-      linked: false,
     });
   });
 });
