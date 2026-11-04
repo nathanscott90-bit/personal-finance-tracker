@@ -1,54 +1,32 @@
-import { listAccounts } from "@/actions/accounts";
 import { getOffsiteAction } from "@/actions/backup";
 import { getBankDownloadAction } from "@/actions/bankdownload";
 import { getClaudeAction } from "@/actions/claude";
-import { getBankConnection } from "@/actions/enablebanking";
 import {
-  getHouseholdAction,
   getPeopleAction,
   listActivityAction,
   whoAmIAction,
 } from "@/actions/household";
 import { getNotifySettings } from "@/actions/notify";
 import { getPaydayAction, getSettingsPage } from "@/actions/settings";
-import { getConnectionAction } from "@/actions/simplefin";
-import { BankConnectionCard } from "@/components/finance/bank/BankConnectionCard";
 import { BankDownloadCard } from "@/components/finance/bank/BankDownloadCard";
 import { NotifyCard } from "@/components/finance/bank/NotifyCard";
 import { PaydayForm } from "@/components/finance/budget/PaydayForm";
 import { CategoryManager } from "@/components/finance/CategoryManager";
 import { ActivityCard } from "@/components/finance/household/ActivityCard";
 import { ClaudeCard } from "@/components/finance/household/ClaudeCard";
-import { HouseholdCard } from "@/components/finance/household/HouseholdCard";
 import { OffsiteBackupCard } from "@/components/finance/household/OffsiteBackupCard";
 import { PeopleCard } from "@/components/finance/household/PeopleCard";
 import { PhoneAccessCard } from "@/components/finance/phone/PhoneAccessCard";
 import { RerunButton } from "@/components/finance/RerunButton";
-import { ConnectionsCard } from "@/components/finance/simplefin/ConnectionsCard";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LOCALE } from "@/lib/locale";
-import { relativeSince } from "@/lib/simplefin/relative";
+import { relativeSince } from "@/lib/relative";
 
 export const dynamic = "force-dynamic";
-
-const stampDate = (iso: string) =>
-  new Date(iso).toLocaleDateString(LOCALE, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 
 export default async function SettingsPage() {
   const { tree } = await getSettingsPage();
   const { stored, resolved } = await getPaydayAction();
-  const connection = await getConnectionAction();
-  const household = await getHouseholdAction();
-  const appAccounts = (await listAccounts()).map((a) => ({
-    id: a.id,
-    name: a.name,
-  }));
-  const bank = await getBankConnection();
   const bankDownload = await getBankDownloadAction();
   const notify = await getNotifySettings();
   const [people, you, activity, offsite, claude] = await Promise.all([
@@ -59,7 +37,6 @@ export default async function SettingsPage() {
     getClaudeAction(),
   ]);
   const now = new Date();
-  const isUs = /^en-US$/i.test(LOCALE);
   return (
     <>
       <h1 className="mb-6 text-title font-semibold">Settings</h1>
@@ -70,22 +47,6 @@ export default async function SettingsPage() {
             bankDownload.last ? relativeSince(bankDownload.last.at, now) : null
           }
         />
-        {/* The automatic Enable Banking link does not cover UK banks; it only
-            shows for anyone who already set it up. */}
-        {bank.configured && (
-          <BankConnectionCard
-            view={bank}
-            lastSyncLabel={
-              bank.lastSyncAt ? relativeSince(bank.lastSyncAt, now) : null
-            }
-            validLabels={Object.fromEntries(
-              bank.banks.map((b) => [
-                b.bank,
-                b.validUntil ? stampDate(b.validUntil) : "unknown",
-              ]),
-            )}
-          />
-        )}
         <NotifyCard
           topic={notify.topic}
           server={notify.server}
@@ -97,27 +58,6 @@ export default async function SettingsPage() {
           publicHost={process.env.FINANCE_PUBLIC_HOST?.trim() || null}
         />
         <PeopleCard people={people} you={you} />
-        <HouseholdCard
-          tokenSet={household.tokenSet}
-          createdAtLabel={
-            household.createdAt ? stampDate(household.createdAt) : null
-          }
-          origin={household.origin}
-        />
-        {isUs && (
-          <ConnectionsCard
-            connection={connection}
-            appAccounts={appAccounts}
-            connectedLabel={
-              connection.connectedAt ? stampDate(connection.connectedAt) : null
-            }
-            lastSyncLabel={
-              connection.lastSyncAt
-                ? relativeSince(connection.lastSyncAt, now)
-                : null
-            }
-          />
-        )}
         <Card>
           <h2 className="mb-1 text-headline font-semibold">Payday</h2>
           <p className="mb-4 text-caption text-ink-2">

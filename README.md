@@ -7,12 +7,12 @@ payoff, a cash-flow forecast and alerts. Both of you use it from your own
 phones and laptops; it knows whose account is whose and who changed what.
 
 Everything stays on your PC: one SQLite file, no cloud service, no account.
-The only things that leave the machine are read-only bank access (Enable
-Banking), phone alerts (ntfy), encrypted backups to a folder you choose, and,
-only if you turn it on, summaries you let Claude read.
+The only things that leave the machine are phone alerts (ntfy), encrypted
+backups to a folder you choose, and, only if you turn it on, summaries you let
+Claude read. Your bank login is never used by the app.
 
 **Setting it up on Windows:** see [SETUP-UK.md](SETUP-UK.md). For phones,
-the wall display and backups: [docs/HOUSEHOLD.md](docs/HOUSEHOLD.md).
+and backups: [docs/HOUSEHOLD.md](docs/HOUSEHOLD.md).
 
 ## What it does
 
@@ -62,10 +62,10 @@ your tailnet, and tells the app which of you is asking. Do not expose port
 
 [CONTRIBUTING.md](CONTRIBUTING.md) and
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) map the code;
-[docs/PLAN.md](docs/PLAN.md) is the original design. US banks are still
-supported (Chase, Bank of America, Wells Fargo, Capital One, Amex, Discover,
-Citi profiles, and SimpleFIN sync when the locale is en-US). Never post real
-bank data in issues or pull requests.
+[docs/PLAN.md](docs/PLAN.md) is the original design. Only UK bank formats
+(NatWest, Nationwide) are recognised automatically; any other bank is taught
+once through the column-mapping step on the Import page. Never post real bank
+data in issues or pull requests.
 
 ## License
 

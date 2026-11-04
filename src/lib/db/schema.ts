@@ -265,22 +265,6 @@ export const balanceSnapshots = sqliteTable(
   ],
 );
 
-/** Accounts SimpleFIN reports for the connected token; `accountId` maps one to an app account. */
-export const simplefinAccounts = sqliteTable("simplefin_accounts", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  sfinId: text("sfin_id").notNull().unique(),
-  orgName: text("org_name"),
-  name: text("name").notNull(),
-  currency: text("currency").notNull().default("USD"),
-  balanceCents: integer("balance_cents"),
-  balanceDate: text("balance_date"),
-  accountId: integer("account_id").references(() => accounts.id, {
-    onDelete: "set null",
-  }),
-  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
-  lastSyncedAt: text("last_synced_at"),
-});
-
 export const weeklyReviews = sqliteTable("weekly_reviews", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   completedAt: text("completed_at").notNull().default(now),

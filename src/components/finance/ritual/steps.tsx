@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { CategoryOption, ReviewItem, Suggestion } from "@/actions/review";
 import { AmountText } from "@/components/finance/AmountText";
 import { ReviewScreen } from "@/components/finance/ReviewScreen";
-import { SyncButton } from "@/components/finance/simplefin/SyncButton";
 import { Card } from "@/components/ui/card";
 import { LOCALE } from "@/lib/locale";
 import { formatCents } from "@/lib/money";
@@ -14,7 +13,6 @@ import type {
   Staleness,
   WeeklyPage,
 } from "@/lib/ritual/types";
-import { relativeSince } from "@/lib/simplefin/relative";
 import { cn } from "@/lib/utils";
 
 const LINK_BUTTON =
@@ -45,15 +43,11 @@ const STALENESS_TEXT: Record<Staleness, string> = {
 };
 
 export function ImportStep({ accounts }: { accounts: AccountImportRow[] }) {
-  const anyLinked = accounts.some((a) => a.syncedAt !== null);
-  const now = new Date();
   return (
     <Card>
       <h2 className="text-headline font-semibold">Import</h2>
       <p className="mt-1 text-body text-ink-2">
-        {anyLinked
-          ? "Linked accounts sync themselves; the rest need a statement."
-          : "Statements from the last week keep everything else honest."}
+        Statements from the last week keep everything else accurate.
       </p>
       <div className="mt-4 grid gap-2">
         {accounts.map((a) => (
@@ -69,13 +63,11 @@ export function ImportStep({ accounts }: { accounts: AccountImportRow[] }) {
               {a.name}
             </span>
             <span className="text-caption text-ink-2">
-              {a.syncedAt !== null
-                ? `synced ${relativeSince(a.syncedAt, now)}`
-                : a.lastImport === null
-                  ? "never"
-                  : a.daysSince === 0
-                    ? "imported today"
-                    : `last import ${a.daysSince} day${a.daysSince === 1 ? "" : "s"} ago`}
+              {a.lastImport === null
+                ? "never"
+                : a.daysSince === 0
+                  ? "imported today"
+                  : `last import ${a.daysSince} day${a.daysSince === 1 ? "" : "s"} ago`}
             </span>
             <span
               className={cn(
@@ -89,10 +81,12 @@ export function ImportStep({ accounts }: { accounts: AccountImportRow[] }) {
         ))}
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Link href="/import" className={LINK_BUTTON}>
-          Import statements
+        <Link href="/settings" className={LINK_BUTTON}>
+          Bank download
         </Link>
-        {anyLinked && <SyncButton />}
+        <Link href="/import" className={LINK_BUTTON}>
+          Import a file
+        </Link>
       </div>
     </Card>
   );
@@ -171,7 +165,6 @@ export function PaceStep({
   pace,
   overspent,
   warn,
-  gateOpen,
   hasBudget,
   month,
   alertCount,
@@ -179,7 +172,6 @@ export function PaceStep({
   pace: Pace;
   overspent: PaceLeaf[];
   warn: PaceLeaf[];
-  gateOpen: boolean;
   hasBudget: boolean;
   month: string;
   alertCount: number;
@@ -200,7 +192,7 @@ export function PaceStep({
       : pace.status === "behind"
         ? "text-positive"
         : "text-ink-2";
-  const showSetupLink = !hasBudget && gateOpen;
+  const showSetupLink = !hasBudget;
   return (
     <Card>
       <h2 className="text-headline font-semibold">Overspend and pace</h2>

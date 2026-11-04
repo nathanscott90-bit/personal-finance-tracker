@@ -31,8 +31,6 @@ export function deleteConfirmText(name: string, d: AccountDependents): string {
   const extras: string[] = [];
   if (d.snapshots) extras.push(`its ${plural(d.snapshots, "stored balance")}`);
   if (d.rules) extras.push(`${plural(d.rules, "rule")} scoped to it`);
-  if (d.linked)
-    extras.push("its SimpleFIN link (the SimpleFIN account becomes unmapped)");
   return extras.length
     ? `Delete "${name}"? This also removes ${extras.join(", ")}.`
     : `Delete "${name}"?`;

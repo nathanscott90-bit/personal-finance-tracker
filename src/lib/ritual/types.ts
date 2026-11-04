@@ -3,7 +3,6 @@ export type ReviewStatus = {
   lastCompleted: string | null; // completedAt date (YYYY-MM-DD) of the latest review
   daysSince: number | null;
   due: boolean;
-  streak: number;
   currentWeekStart: string;
 };
 export type Staleness = "fresh" | "aging" | "stale" | "never";
@@ -12,8 +11,6 @@ export type AccountImportRow = {
   name: string;
   color: string;
   lastImport: string | null;
-  /** Newest SimpleFIN sync for this account; null when it is not linked. */
-  syncedAt: string | null;
   daysSince: number | null;
   staleness: Staleness;
 };
@@ -51,7 +48,6 @@ export type WeeklyPage = {
   pace: Pace;
   overspent: PaceLeaf[];
   warn: PaceLeaf[];
-  gateOpen: boolean;
   hasBudget: boolean;
   bills: BillRow[]; // overdue first, then due within 7 days, sorted by nextExpected
   budgetLeftToAssign: number | null;

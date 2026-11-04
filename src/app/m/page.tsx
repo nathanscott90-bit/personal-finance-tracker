@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { PhoneSyncButton } from "@/components/finance/phone/PhoneSyncButton";
 import { todayIso } from "@/lib/dates";
 import { getDb } from "@/lib/db/client";
 import { LOCALE } from "@/lib/locale";
@@ -12,7 +11,6 @@ import {
 } from "@/lib/maintenance/rerun";
 import { formatCents } from "@/lib/money";
 import { daysAway, phoneSummary } from "@/lib/phone/summary";
-import { relativeSince } from "@/lib/simplefin/relative";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -47,10 +45,11 @@ export default function PhonePage() {
       <header className="flex items-center justify-between pt-2">
         <h1 className="text-title font-semibold">Finance</h1>
         <div className="flex items-center gap-2 text-caption text-ink-2">
-          {s.lastSyncAt
-            ? `Updated ${relativeSince(s.lastSyncAt, new Date())}`
-            : ""}
-          {s.banksConnected && <PhoneSyncButton />}
+          {s.dataAgeDays === null
+            ? ""
+            : s.dataAgeDays === 0
+              ? "Bank data from today"
+              : `Bank data ${s.dataAgeDays} day${s.dataAgeDays === 1 ? "" : "s"} old`}
         </div>
       </header>
 
@@ -68,9 +67,7 @@ export default function PhonePage() {
         </section>
       ) : (
         !(plan && plan.transferCents > 0) && (
-          <div className={`${card} text-body text-ink-2`}>
-            Nothing needs doing.
-          </div>
+          <div className={`${card} text-body text-ink-2`}>Nothing to do.</div>
         )
       )}
 

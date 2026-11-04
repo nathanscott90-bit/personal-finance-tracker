@@ -136,7 +136,6 @@ const base = {
   setAside: [],
   month: "2026-09",
   today: "2026-09-06",
-  gate: { open: true, completeMonths: 3, needed: 2 },
   dataMonths: ["2026-07", "2026-08", "2026-09"],
 };
 
@@ -195,6 +194,18 @@ describe("buildBudgetPage", () => {
       horizonKind: "payday",
     });
   });
+  it("reports whether there is a finished month to average from", () => {
+    expect(buildBudgetPage({ ...base, payday: null }).hasHistory).toBe(true);
+    // Only the current month has data: nothing finished to average yet.
+    expect(
+      buildBudgetPage({ ...base, payday: null, dataMonths: ["2026-09"] })
+        .hasHistory,
+    ).toBe(false);
+    expect(
+      buildBudgetPage({ ...base, payday: null, dataMonths: [] }).hasHistory,
+    ).toBe(false);
+  });
+
   it("pins overspent leaves and warns near the limit", () => {
     const p = buildBudgetPage({
       ...base,

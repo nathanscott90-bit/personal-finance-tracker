@@ -101,8 +101,8 @@ export default async function CheckPage() {
       <div className="mb-6">
         <h1 className="text-title font-semibold">Monthly check</h1>
         <p className="text-caption text-ink-2">
-          Your monthly review, done for you. A summary is sent to your phone
-          each payday.
+          Bills, work expenses and savings for the last pay period. A summary is
+          sent to your phone each payday.
         </p>
       </div>
       {!c.ready ? (

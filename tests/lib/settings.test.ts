@@ -18,11 +18,11 @@ describe("settings", () => {
   });
   it("deletes a key so the fallback comes back", () => {
     const db = openDb(":memory:");
-    setSetting(db, "wall_token_hash", "abc");
-    expect(getSetting<string | null>(db, "wall_token_hash", null)).toBe("abc");
-    deleteSetting(db, "wall_token_hash");
-    expect(getSetting<string | null>(db, "wall_token_hash", null)).toBeNull();
-    deleteSetting(db, "wall_token_hash"); // deleting a missing key is a no-op
-    expect(getSetting<string | null>(db, "wall_token_hash", null)).toBeNull();
+    setSetting(db, "some_key", "abc");
+    expect(getSetting<string | null>(db, "some_key", null)).toBe("abc");
+    deleteSetting(db, "some_key");
+    expect(getSetting<string | null>(db, "some_key", null)).toBeNull();
+    deleteSetting(db, "some_key"); // deleting a missing key is a no-op
+    expect(getSetting<string | null>(db, "some_key", null)).toBeNull();
   });
 });

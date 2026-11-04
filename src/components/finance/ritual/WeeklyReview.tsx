@@ -36,7 +36,7 @@ export function WeeklyReview({
   const router = useRouter();
   const [step, setStep] = useState(initialStep);
   const [pending, start] = useTransition();
-  const [finished, setFinished] = useState<{ streak: number } | null>(null);
+  const [finished, setFinished] = useState(false);
   const [showBanner] = useState(page.status.doneThisWeek);
 
   const goTo = (n: number) => {
@@ -47,8 +47,8 @@ export function WeeklyReview({
 
   const finish = () => {
     start(async () => {
-      const res = await completeWeeklyReview();
-      setFinished({ streak: res.streak });
+      await completeWeeklyReview();
+      setFinished(true);
       router.refresh();
     });
   };
@@ -59,9 +59,7 @@ export function WeeklyReview({
     const next = addDays(page.today, 7);
     return (
       <Card className="mx-auto max-w-md text-center">
-        <h1 className="text-title font-semibold">
-          Reviewed. {finished.streak}-week streak.
-        </h1>
+        <h1 className="text-title font-semibold">Review done</h1>
         <p className="mt-2 text-body text-ink-2">
           Next one is due {shortDate(next)}
         </p>
@@ -97,7 +95,6 @@ export function WeeklyReview({
               pace={page.pace}
               overspent={page.overspent}
               warn={page.warn}
-              gateOpen={page.gateOpen}
               hasBudget={page.hasBudget}
               month={page.month}
               alertCount={page.alertCount}

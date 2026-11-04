@@ -1,18 +1,12 @@
 /**
- * Relative wording for sync timestamps. Rendered on the server (the pages are
- * `force-dynamic`) so a client component never derives it from its own clock.
+ * Relative wording for timestamps ("3 days ago"). Rendered on the server (the
+ * pages are `force-dynamic`) so a client component never derives it from its
+ * own clock.
  */
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
-
-/** Whole hours since `iso`; a timestamp in the future counts as 0. */
-export function hoursSince(iso: string, now: Date): number {
-  const ms = now.getTime() - new Date(iso).getTime();
-  if (!Number.isFinite(ms) || ms < 0) return 0;
-  return Math.floor(ms / HOUR);
-}
 
 const plural = (n: number, unit: string) =>
   `${n} ${unit}${n === 1 ? "" : "s"} ago`;

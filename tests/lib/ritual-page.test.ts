@@ -12,7 +12,6 @@ const status: ReviewStatus = {
   lastCompleted: "2026-08-24",
   daysSince: 13,
   due: true,
-  streak: 1,
   currentWeekStart: "2026-08-31",
 };
 
@@ -22,7 +21,6 @@ const accounts: AccountImportRow[] = [
     name: "Checking",
     color: "#0A84FF",
     lastImport: "2026-09-01",
-    syncedAt: null,
     daysSince: 5,
     staleness: "fresh",
   },
@@ -76,7 +74,7 @@ function budgetFixture(overrides: Partial<BudgetPage> = {}): BudgetPage {
     months: ["2026-09"],
     today,
     isCurrent: true,
-    gate: { open: true, completeMonths: 3, needed: 3 },
+    hasHistory: true,
     hasBudget: true,
     prevHasBudget: true,
     nextHasBudget: false,
@@ -212,7 +210,7 @@ const undatedGoal = goalFixture({ id: 2, name: "New couch" });
 const goals: Goal[] = [datedGoal, undatedGoal];
 
 describe("buildWeeklyPage", () => {
-  it("assembles pace from the budget when the gate is open and a budget exists", () => {
+  it("assembles pace from the budget when a budget exists", () => {
     const page = buildWeeklyPage({
       today,
       status,
@@ -229,7 +227,6 @@ describe("buildWeeklyPage", () => {
     expect(page.pace.reference).toBe("budget");
     expect(page.pace.spentCents).toBe(140000); // budget.spentCents, excludes uncategorized
     expect(page.pace.referenceCents).toBe(400000);
-    expect(page.gateOpen).toBe(true);
     expect(page.hasBudget).toBe(true);
     expect(page.budgetLeftToAssign).toBe(100000);
   });
@@ -336,26 +333,6 @@ describe("buildWeeklyPage", () => {
     expect(page.pace.referenceCents).toBe(120000);
     expect(page.hasBudget).toBe(false);
     expect(page.budgetLeftToAssign).toBeNull();
-  });
-
-  it("falls back to the average when the gate is closed even with a budget", () => {
-    const page = buildWeeklyPage({
-      today,
-      status,
-      accounts,
-      queueCount: 0,
-      budget: budgetFixture({
-        gate: { open: false, completeMonths: 1, needed: 3 },
-      }),
-      insightsSpent: 90000,
-      avgSpend: 120000,
-      bills: [],
-      goals: [],
-      alertCount: 0,
-    });
-
-    expect(page.pace.reference).toBe("average");
-    expect(page.gateOpen).toBe(false);
   });
 
   it("uses reference none when there is no budget and no usable average", () => {

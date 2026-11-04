@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reviewStatus, staleness, streak, weekStart } from "@/lib/ritual/weeks";
+import { reviewStatus, staleness, weekStart } from "@/lib/ritual/weeks";
 
 describe("weekStart", () => {
   it("returns the Monday of the week, including Sundays and year boundaries", () => {
@@ -10,18 +10,6 @@ describe("weekStart", () => {
   });
 });
 
-describe("streak", () => {
-  it("counts consecutive weeks back from the current week when done, else from last week", () => {
-    expect(
-      streak(["2026-08-17", "2026-08-24", "2026-08-31"], "2026-09-06"),
-    ).toBe(3);
-    expect(streak(["2026-08-17", "2026-08-24"], "2026-09-06")).toBe(2); // this week not done yet, last week done
-    expect(streak(["2026-08-10", "2026-08-17"], "2026-09-06")).toBe(0); // gap of one week
-    expect(streak([], "2026-09-06")).toBe(0);
-    expect(streak(["2026-08-31", "2026-08-31"], "2026-09-06")).toBe(1); // duplicates collapse
-  });
-});
-
 describe("reviewStatus", () => {
   it("is due after seven days or when never reviewed", () => {
     expect(reviewStatus([], "2026-09-06")).toMatchObject({
@@ -29,7 +17,6 @@ describe("reviewStatus", () => {
       lastCompleted: null,
       daysSince: null,
       due: true,
-      streak: 0,
       currentWeekStart: "2026-08-31",
     });
     expect(
@@ -49,7 +36,7 @@ describe("reviewStatus", () => {
         [{ weekStart: "2026-08-31", completedAt: "2026-09-01" }],
         "2026-09-06",
       ),
-    ).toMatchObject({ doneThisWeek: true, due: false, streak: 1 });
+    ).toMatchObject({ doneThisWeek: true, due: false });
   });
   it("accepts completedAt with a time part", () => {
     expect(

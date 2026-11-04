@@ -29,9 +29,6 @@ Only the latest commit on `main` is supported. There are no release branches.
   return account numbers, raw bank descriptions or credentials. Anything that
   breaks either **is** in scope. So is anything that lets an off-PC backup be
   read without its passphrase.
-- The wall display endpoints (`/wall`, `/api/wall`) are protected by a display
-  token and deliberately expose only a summary. Anything that lets that token
-  read or change more than the summary **is** in scope.
-- Also in scope: anything that leaks data from `data/finance.db` or the
-  SimpleFIN access URL, or that lets a crafted CSV/OFX file or SimpleFIN
-  response run code or write outside the database.
+- Also in scope: anything that leaks data from `data/finance.db`, or that lets
+  a crafted CSV/OFX file run code or write outside the database. So is
+  anything in Bank download that stores or sends a bank login.

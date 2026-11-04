@@ -11,7 +11,6 @@ import type {
   BudgetLeaf,
   BudgetPage,
   BudgetRow,
-  Gate,
   LeafMeta,
   ResolvedPayday,
   Status,
@@ -56,7 +55,6 @@ export function buildBudgetPage(i: {
   month: string;
   today: string;
   payday: ResolvedPayday;
-  gate: Gate;
   dataMonths: string[];
 }): BudgetPage {
   const { month, today } = i;
@@ -210,7 +208,7 @@ export function buildBudgetPage(i: {
     months,
     today,
     isCurrent,
-    gate: i.gate,
+    hasHistory: i.dataMonths.some((m) => m < current),
     hasBudget: budgetedLeaves.length > 0,
     prevHasBudget: budgetMonths.has(shiftMonth(month, -1)),
     nextHasBudget: budgetMonths.has(shiftMonth(month, 1)),

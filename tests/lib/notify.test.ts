@@ -43,9 +43,6 @@ function page(today: string, balanceCents: number): FundingPage {
 }
 const base = {
   billChanges: [],
-  expiring: [],
-  syncError: null,
-  lastGoodSyncAt: null,
 };
 
 describe("decideNotices", () => {
@@ -92,27 +89,9 @@ describe("decideNotices", () => {
       "Add £92.00 to NatWest Bills this month",
     ]);
   });
-
-  it("warns about consent and failing sync", () => {
-    const n = decideNotices({
-      ...base,
-      today: "2026-10-10",
-      funding: page("2026-10-10", 500000),
-      settings: { standingOrderCents: 0, reminderDays: 2 },
-      expiring: [
-        { bank: "NatWest", validUntil: "2026-10-20T00:00:00Z", expired: false },
-      ],
-      syncError: "NatWest Bills: Enable Banking 500",
-      lastGoodSyncAt: "2026-10-05T07:00:00Z",
-    });
-    expect(n.map((x) => x.title)).toEqual([
-      "NatWest connection needs renewing",
-      "Bank sync is failing",
-    ]);
-  });
 });
 
-describe("decideNotices with manual bank downloads", () => {
+describe("decideNotices and the age of the bank data", () => {
   const input = (today: string, over: object = {}) => ({
     ...base,
     today,
@@ -122,32 +101,17 @@ describe("decideNotices with manual bank downloads", () => {
   });
 
   it("nudges weekly once the data is a week old, and only then", () => {
-    const stale = decideNotices(
-      input("2026-10-10", { manualDownloads: true, dataAgeDays: 9 }),
-    );
+    const stale = decideNotices(input("2026-10-10", { dataAgeDays: 9 }));
     expect(stale.map((n) => n.title)).toEqual(["Time for a bank download"]);
     expect(stale[0].message).toContain("9 days old");
     // Same week, same key: never sent twice.
-    const again = decideNotices(
-      input("2026-10-11", { manualDownloads: true, dataAgeDays: 10 }),
-    );
+    const again = decideNotices(input("2026-10-11", { dataAgeDays: 10 }));
     expect(again[0].key).toBe(stale[0].key);
-    expect(
-      decideNotices(
-        input("2026-10-10", { manualDownloads: true, dataAgeDays: 3 }),
-      ),
-    ).toEqual([]);
-    // No data yet (new install) or automatic sync: no nudge.
-    expect(
-      decideNotices(
-        input("2026-10-10", { manualDownloads: true, dataAgeDays: null }),
-      ),
-    ).toEqual([]);
-    expect(
-      decideNotices(
-        input("2026-10-10", { manualDownloads: false, dataAgeDays: 20 }),
-      ),
-    ).toEqual([]);
+    expect(decideNotices(input("2026-10-10", { dataAgeDays: 3 }))).toEqual([]);
+    // No data yet (a new install): no nudge.
+    expect(decideNotices(input("2026-10-10", { dataAgeDays: null }))).toEqual(
+      [],
+    );
   });
 
   it("does not call a bill missing when the data is stale", () => {

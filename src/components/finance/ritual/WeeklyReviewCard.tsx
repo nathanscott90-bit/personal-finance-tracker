@@ -34,8 +34,6 @@ export function WeeklyReviewCard({
   status: ReviewStatus;
   className?: string;
 }) {
-  const streakLine =
-    status.streak > 0 ? `${status.streak}-week streak` : "No streak yet";
   const { text, color } = statusLine(status);
   const buttonLabel = status.doneThisWeek
     ? "Review again"
@@ -45,8 +43,7 @@ export function WeeklyReviewCard({
   return (
     <Card className={className}>
       <h2 className="text-headline font-semibold">Weekly review</h2>
-      <p className="mt-1 text-caption text-ink-2">{streakLine}</p>
-      <p className={cn("mt-2 text-body font-medium", color)}>{text}</p>
+      <p className={cn("mt-1 text-body font-medium", color)}>{text}</p>
       <Link
         href="/weekly"
         className="mt-4 inline-block rounded-control bg-accent px-5 py-2.5 text-body font-medium text-white"

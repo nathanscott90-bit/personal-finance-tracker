@@ -10,7 +10,6 @@ export type ResolvedPayday = {
   next: string; // first schedule date strictly after today
   daysUntil: number; // daysBetween(today, next) ≥ 1
 } | null;
-export type Gate = { open: boolean; completeMonths: number; needed: number };
 export type LeafMeta = {
   id: number;
   name: string;
@@ -91,7 +90,8 @@ export type BudgetPage = {
   months: string[];
   today: string;
   isCurrent: boolean;
-  gate: Gate;
+  /** At least one finished month of data to average from. */
+  hasHistory: boolean;
   hasBudget: boolean;
   prevHasBudget: boolean;
   nextHasBudget: boolean;

@@ -47,13 +47,8 @@ export function decideNotices(i: {
   funding: FundingPage;
   settings: NotifySettings;
   billChanges: BillChange[];
-  expiring: { bank: string; validUntil: string; expired: boolean }[];
-  syncError: string | null;
-  lastGoodSyncAt: string | null;
   /** Days since the app last got bank data; null when it has none yet. */
   dataAgeDays?: number | null;
-  /** True when data arrives by manual download rather than automatic sync. */
-  manualDownloads?: boolean;
 }): Notice[] {
   const out: Notice[] = [];
   const { funding: f, today } = i;
@@ -108,23 +103,7 @@ export function decideNotices(i: {
       priority: "default",
     });
 
-  for (const e of i.expiring)
-    out.push({
-      key: `consent:${e.bank}:${e.validUntil}:${e.expired ? "x" : "w"}`,
-      title: e.expired
-        ? `${e.bank} connection has expired`
-        : `${e.bank} connection needs renewing`,
-      message: e.expired
-        ? "Open the app → Settings → Bank connection → Reconnect. Takes a minute."
-        : `Access ends ${day(e.validUntil.slice(0, 10))}. Open the app → Settings → Bank connection → Reconnect.`,
-      priority: e.expired ? "high" : "default",
-    });
-
-  if (
-    i.manualDownloads &&
-    i.dataAgeDays != null &&
-    i.dataAgeDays >= NUDGE_AFTER_DAYS
-  )
+  if (i.dataAgeDays != null && i.dataAgeDays >= NUDGE_AFTER_DAYS)
     out.push({
       key: `download:${Math.floor(Date.parse(`${today}T00:00:00Z`) / (7 * 86_400_000))}`,
       title: "Time for a bank download",
@@ -132,18 +111,6 @@ export function decideNotices(i: {
       priority: "default",
     });
 
-  if (i.syncError) {
-    const stale =
-      !i.lastGoodSyncAt ||
-      daysBetween(i.lastGoodSyncAt.slice(0, 10), today) >= 2;
-    if (stale)
-      out.push({
-        key: `syncfail:${today}`,
-        title: "Bank sync is failing",
-        message: i.syncError.slice(0, 300),
-        priority: "default",
-      });
-  }
   return out;
 }
 

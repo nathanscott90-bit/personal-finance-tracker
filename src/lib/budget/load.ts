@@ -5,7 +5,6 @@ import type { Pre } from "@/lib/pre";
 import { listBills } from "@/lib/recurring/refresh";
 import { irregularItems, spreadByLeaf } from "@/lib/spreading/items";
 import { listPlanned } from "@/lib/spreading/store";
-import { budgetGate } from "./gate";
 import { buildBudgetPage } from "./page";
 import { resolvePayday } from "./payday";
 import { getBudgetIncome, listBudgetLeaves, listBudgetRows } from "./store";
@@ -24,7 +23,6 @@ export function loadBudgetPage(
   const incomeCents = getBudgetIncome(db, month);
   const bills = pre.bills ?? listBills(db, { today }).bills;
   const payday = resolvePayday(db, bills, today);
-  const gate = budgetGate(db, today);
   const planned = listPlanned(db);
   const items = irregularItems({ bills, planned, today, leaves });
   return buildBudgetPage({
@@ -38,7 +36,6 @@ export function loadBudgetPage(
     month,
     today,
     payday,
-    gate,
     dataMonths: dataMonths(lines),
   });
 }

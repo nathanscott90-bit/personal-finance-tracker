@@ -7,7 +7,7 @@ profiles, fixes and features are all welcome.
 
 The app is **local-first and single-household**: one SQLite file on your own
 machine, no accounts, no cloud backend, no telemetry. The only outbound network
-calls are the optional SimpleFIN sync. Changes that keep that shape are the
+calls are the phone alerts (ntfy) you turn on yourself. Changes that keep that shape are the
 easiest to accept. If you want to build something large — a new page, a new
 data source, anything that touches the schema — open an issue or discussion
 first so we can agree on the approach before you spend the time.

@@ -2,28 +2,26 @@ import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseCsv } from "@/lib/import/csv";
 import { detectDateFormat, detectProfile } from "@/lib/import/detect";
-import { BUILTIN_PROFILES } from "@/lib/import/profiles";
+import { TEST_PROFILES } from "../../profiles";
 
 const headersOf = (f: string) =>
   parseCsv(fs.readFileSync(`tests/fixtures/${f}`, "utf8")).headers;
 
 describe("detectProfile", () => {
   it("finds Chase card", () =>
-    expect(detectProfile(headersOf("chase.csv"), BUILTIN_PROFILES)?.name).toBe(
+    expect(detectProfile(headersOf("chase.csv"), TEST_PROFILES)?.name).toBe(
       "Chase (card)",
     ));
   it("finds Bank of America", () =>
-    expect(detectProfile(headersOf("bofa.csv"), BUILTIN_PROFILES)?.name).toBe(
+    expect(detectProfile(headersOf("bofa.csv"), TEST_PROFILES)?.name).toBe(
       "Bank of America",
     ));
   it("finds Amex", () =>
-    expect(detectProfile(headersOf("amex.csv"), BUILTIN_PROFILES)?.name).toBe(
+    expect(detectProfile(headersOf("amex.csv"), TEST_PROFILES)?.name).toBe(
       "American Express",
     ));
   it("returns null for unknown", () =>
-    expect(
-      detectProfile(headersOf("unknown.csv"), BUILTIN_PROFILES),
-    ).toBeNull());
+    expect(detectProfile(headersOf("unknown.csv"), TEST_PROFILES)).toBeNull());
 });
 
 describe("detectDateFormat", () => {

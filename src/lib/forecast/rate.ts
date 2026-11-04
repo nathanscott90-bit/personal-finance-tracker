@@ -26,7 +26,7 @@ export function spendRate(i: {
 }): SpendRate {
   const { budget, avgVariableCents, avgUncategorizedCents, today } = i;
 
-  if (budget?.hasBudget && budget.gate.open) {
+  if (budget?.hasBudget) {
     const variableLeaves = budget.groups
       .flatMap((g) => g.leaves)
       .filter(isVariable);

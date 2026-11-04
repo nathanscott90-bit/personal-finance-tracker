@@ -1,6 +1,6 @@
 /**
  * The unattended daily job (Windows Task Scheduler runs it; see
- * setup-windows.ps1): sync the banks, recompute, send any alerts.
+ * setup-windows.ps1): recompute, send any alerts, back up off the PC.
  * `npm run daily`
  */
 import fs from "node:fs";
@@ -12,9 +12,8 @@ import { runDaily } from "../src/lib/notify/daily";
 async function main() {
   const db = openDb(dbPath());
   const started = new Date();
-  const r = await runDaily(db, { fetchFn: fetch });
-  // Off-PC backup, at most once every 20 hours, after the sync so the copy
-  // includes today's transactions.
+  const r = await runDaily(db);
+  // Off-PC backup, at most once every 20 hours.
   let backupNote = "";
   if (offsiteDue(db, started)) {
     const b = runOffsiteBackup(db, dbPath(), started);
@@ -22,12 +21,8 @@ async function main() {
   }
   const line = [
     started.toISOString(),
-    r.sync
-      ? `sync ${r.sync.ok ? "ok" : "FAILED"} +${r.sync.results.reduce((n, x) => n + x.added, 0)}`
-      : "no bank connected",
     `alerts ${r.sent.map((n) => n.key).join(",") || "none"}`,
     r.failed.length ? `send failures ${r.failed.join("; ")}` : "",
-    r.sync?.error ? `error ${r.sync.error}` : "",
     backupNote,
   ]
     .filter(Boolean)

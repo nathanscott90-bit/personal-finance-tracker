@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addDays } from "@/lib/dates";
 import { openDb } from "@/lib/db/client";
-import { accounts, imports, simplefinAccounts } from "@/lib/db/schema";
+import { accounts, imports } from "@/lib/db/schema";
 import {
   accountImportRows,
   completeWeek,
@@ -92,41 +92,6 @@ describe("accountImportRows", () => {
     expect(s?.lastImport).toBeNull();
     expect(s?.daysSince).toBeNull();
     expect(s?.staleness).toBe("never");
-    expect(c?.syncedAt).toBeNull();
-  });
-
-  it("measures a linked account from its last sync, not its last import", () => {
-    const db = openDb(":memory:");
-    const [checking] = db
-      .insert(accounts)
-      .values({ name: "Checking", type: "checking" })
-      .returning()
-      .all();
-    db.insert(imports)
-      .values({
-        accountId: checking.id,
-        filename: "may.csv",
-        fileHash: "h1",
-        rowCount: 1,
-        newCount: 1,
-        dupCount: 0,
-        importedAt: "2026-05-01T00:00:00.000Z",
-      })
-      .run();
-    db.insert(simplefinAccounts)
-      .values({
-        sfinId: "ACT-1",
-        name: "Everyday Checking",
-        accountId: checking.id,
-        lastSyncedAt: "2026-09-05T09:00:00.000Z",
-      })
-      .run();
-
-    const [row] = accountImportRows(db, "2026-09-06");
-    expect(row.syncedAt).toBe("2026-09-05T09:00:00.000Z");
-    expect(row.lastImport?.slice(0, 10)).toBe("2026-05-01"); // still reported
-    expect(row.daysSince).toBe(1);
-    expect(row.staleness).toBe("fresh");
   });
 
   it("never reports a negative age for a UTC stamp written last night", () => {
@@ -154,39 +119,5 @@ describe("accountImportRows", () => {
     const [row] = accountImportRows(db, today);
     expect(row.daysSince).toBe(0);
     expect(row.staleness).toBe("fresh");
-  });
-
-  it("ignores a disabled link and falls back to import staleness", () => {
-    const db = openDb(":memory:");
-    const [checking] = db
-      .insert(accounts)
-      .values({ name: "Checking", type: "checking" })
-      .returning()
-      .all();
-    db.insert(imports)
-      .values({
-        accountId: checking.id,
-        filename: "aug.csv",
-        fileHash: "h1",
-        rowCount: 1,
-        newCount: 1,
-        dupCount: 0,
-        importedAt: "2026-08-01T00:00:00.000Z",
-      })
-      .run();
-    db.insert(simplefinAccounts)
-      .values({
-        sfinId: "ACT-1",
-        name: "Everyday Checking",
-        accountId: checking.id,
-        enabled: false,
-        lastSyncedAt: "2026-09-05T09:00:00.000Z",
-      })
-      .run();
-
-    const [row] = accountImportRows(db, "2026-09-06");
-    expect(row.syncedAt).toBeNull();
-    expect(row.daysSince).toBe(36);
-    expect(row.staleness).toBe("stale");
   });
 });

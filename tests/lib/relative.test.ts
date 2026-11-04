@@ -1,18 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { hoursSince, relativeSince } from "@/lib/simplefin/relative";
+import { relativeSince } from "@/lib/relative";
 
 const now = new Date("2026-09-07T12:00:00.000Z");
-
-describe("hoursSince", () => {
-  it("floors to whole hours", () => {
-    expect(hoursSince("2026-09-07T11:59:00.000Z", now)).toBe(0);
-    expect(hoursSince("2026-09-07T06:30:00.000Z", now)).toBe(5);
-    expect(hoursSince("2026-09-06T12:00:00.000Z", now)).toBe(24);
-  });
-  it("treats a future stamp as zero", () => {
-    expect(hoursSince("2026-09-07T18:00:00.000Z", now)).toBe(0);
-  });
-});
 
 describe("relativeSince", () => {
   it("words the gap", () => {

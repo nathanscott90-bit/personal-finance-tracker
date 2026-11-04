@@ -7,7 +7,6 @@ import {
   categories,
   imports,
   rules,
-  simplefinAccounts,
   transactions,
 } from "@/lib/db/schema";
 
@@ -128,10 +127,6 @@ describe("deleteAccountIfEmpty", () => {
         dupCount: 0,
       })
       .run();
-    db.insert(simplefinAccounts)
-      .values({ sfinId: "ACT-9", name: "Card", accountId: gone.id })
-      .run();
-
     expect(deleteAccountIfEmpty(db, gone.id)).toEqual({ ok: true });
     expect(
       db
@@ -152,9 +147,5 @@ describe("deleteAccountIfEmpty", () => {
         .sort(),
     ).toEqual(["aldi", "heb"]);
     expect(db.select().from(imports).all()).toHaveLength(0);
-    expect(db.select().from(simplefinAccounts).get()).toMatchObject({
-      sfinId: "ACT-9",
-      accountId: null,
-    });
   });
 });

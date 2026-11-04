@@ -1,12 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { daysBetween, localStamp } from "@/lib/dates";
 import type { Db } from "@/lib/db/client";
-import {
-  accounts,
-  imports,
-  simplefinAccounts,
-  weeklyReviews,
-} from "@/lib/db/schema";
+import { accounts, imports, weeklyReviews } from "@/lib/db/schema";
 import type { AccountImportRow } from "./types";
 import { staleness, weekStart } from "./weeks";
 
@@ -48,28 +43,14 @@ export function accountImportRows(db: Db, today: string): AccountImportRow[] {
       name: accounts.name,
       color: accounts.color,
       lastImport: sql<string | null>`max(${imports.importedAt})`,
-      // Only an enabled link keeps an account fresh: disconnecting disables
-      // every link, and the account falls back to import staleness.
-      syncedAt: sql<string | null>`max(${simplefinAccounts.lastSyncedAt})`,
     })
     .from(accounts)
     .leftJoin(imports, eq(imports.accountId, accounts.id))
-    .leftJoin(
-      simplefinAccounts,
-      and(
-        eq(simplefinAccounts.accountId, accounts.id),
-        eq(simplefinAccounts.enabled, true),
-      ),
-    )
     .groupBy(accounts.id)
     .orderBy(accounts.id)
     .all();
   return rows.map((r) => {
-    // A linked account counts as fresh from its last sync, not its last CSV.
-    const stamps = [r.lastImport, r.syncedAt].filter(
-      (s): s is string => s !== null,
-    );
-    const newest = stamps.length === 0 ? null : (stamps.sort().at(-1) ?? null);
+    const newest = r.lastImport;
     // Rows written before import stamps went local carry a UTC date that can
     // read as tomorrow; an import cannot be newer than today.
     const daysSince =
@@ -81,7 +62,6 @@ export function accountImportRows(db: Db, today: string): AccountImportRow[] {
       name: r.name,
       color: r.color,
       lastImport: r.lastImport,
-      syncedAt: r.syncedAt,
       daysSince,
       staleness: staleness(daysSince),
     };
