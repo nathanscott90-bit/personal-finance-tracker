@@ -50,6 +50,20 @@ Requires Node 24, then `npm install`.
 follows. Settings → Off-PC backup adds an encrypted daily copy somewhere
 else. Never put `data/finance.db` itself in a synced folder.
 
+`data/my-rules.json` (optional) holds your own categorising rules: local
+shops, employer, mortgage. They stay out of the code because the code is
+public. Each line is a pattern and a category name as the app shows it:
+
+```json
+{ "rules": [
+  { "pattern": "corner cafe", "category": "Coffee & takeout" },
+  { "pattern": "acme ltd", "category": "Paycheck", "direction": "in" }
+] }
+```
+
+Applied on every import and by Settings → Data → Re-apply. Bad lines are
+skipped with a warning, never an error.
+
 ## Security in one paragraph
 
 The app has no login of its own and listens only on `127.0.0.1`. Your

@@ -256,6 +256,181 @@ export const UK_RULES: BuiltinRule[] = [
     matchType: "regex",
     priority: 30,
   },
+
+  // ----- common UK brands and statement patterns -----
+
+  // Card spending in a foreign currency is holiday spending: Nationwide shows
+  // "… ES 55.000000 EUR at 1.17000". USD is left out: from the UK it is
+  // mostly online subscriptions.
+  {
+    pattern:
+      "\\b(?:eur|myr|thb|aud|nzd|cad|chf|jpy|sgd|idr|vnd|aed|try|sek|nok|dkk|pln|czk|huf|hkd|inr|mxn|zar|isk|php|krw|cny|twd|mad|egp) at\\b",
+    category: "fun/travel",
+    field: "raw",
+    matchType: "regex",
+    priority: 14,
+  },
+  // bank fees: Nationwide's monthly fee, NatWest's "09OCT A/C 12345678"
+  {
+    pattern: "\\b(monthly account fee|account fee)\\b",
+    category: "debt/interest-fees",
+    field: "raw",
+    matchType: "regex",
+    priority: 12,
+  },
+  {
+    pattern: "^\\d{2}[a-z]{3} a/c \\d+$",
+    category: "debt/interest-fees",
+    field: "raw",
+    matchType: "regex",
+    priority: 12,
+  },
+  {
+    pattern: "\\b(myrewards|fairer share|cashback|credit bal refunds?)\\b",
+    category: "income/other-income",
+    field: "raw",
+    matchType: "regex",
+    direction: "in",
+    priority: 11,
+  },
+  {
+    pattern: "\\bpaypal \\*?paypal credit\\b|\\bpaypal credit\\b",
+    category: "debt/card-payments",
+    field: "raw",
+    matchType: "regex",
+    priority: 20,
+  },
+  // family
+  {
+    pattern:
+      "\\b(zooplus|pets at home|petplan|animal friends|sains pet|pet insurance|vets?|veterinary|animal health)\\b",
+    category: "family/pets",
+    matchType: "regex",
+    priority: 24,
+  },
+  {
+    pattern:
+      "\\b(nursery|nurseries|childcare|childminder|after school club|soft ?play|smyths|mothercare|the entertainer|lego|yoto|kids)\\b",
+    category: "family/childcare-kids",
+    matchType: "regex",
+    priority: 27,
+  },
+  // home
+  {
+    pattern: "\\b(home ?ins|home insurance|appliance care|boiler cover)\\b",
+    category: "home/insurance",
+    matchType: "regex",
+    priority: 25,
+  },
+  {
+    pattern: "\\b(rust oak|furniture|carpets?|curtains)\\b",
+    category: "home/repairs-household",
+    matchType: "regex",
+    priority: 31,
+  },
+  // phone and broadband
+  {
+    pattern:
+      "\\b(seethelight|see the light|gigaclear|cuckoo|youfibre|trooli|brsk|community fibre|now broadband)\\b",
+    category: "bills/phone-internet",
+    matchType: "regex",
+    priority: 28,
+  },
+  // subscriptions
+  {
+    pattern:
+      "\\b(netflix|anthropic|claude\\.ai|openai|chatgpt|patreon|google play|hbo ?max|hbomax|trainerroad|komoot|ring (basic|solo|protect|standard) plan|spotify|youtube premium)\\b",
+    category: "bills/subscriptions",
+    matchType: "regex",
+    priority: 29,
+  },
+  // fuel and transport
+  {
+    pattern: "\\b(rontec|service stat\\w*|totalenergies|avia|emo)\\b",
+    category: "transport/fuel",
+    matchType: "regex",
+    priority: 29,
+  },
+  {
+    pattern:
+      "\\b(se trains|park with ease|parking|toll|tolls|sanef|aprr|sapn|grab rides)\\b",
+    category: "transport/repairs-parking-transit",
+    matchType: "regex",
+    priority: 30,
+  },
+  // travel
+  {
+    pattern:
+      "\\b(hotels?|loveholidays|airalo|ctrip|trip\\.com|holiday inn|novotel|ibis|centerparcs|center parcs|haven holidays)\\b",
+    category: "fun/travel",
+    matchType: "regex",
+    priority: 28,
+  },
+  // food and drink
+  {
+    pattern:
+      "\\b(ssp|elior|dunkin'?|tea ?rooms?|tea ?house|teaport|bakery|baker'?s|patisserie|kiosk|snack bar|ice cream|confectionery|caf|coffee|roast\\w*|strbcks|falafel|deli|aelia)\\b",
+    category: "food/coffee-takeout",
+    matchType: "regex",
+    priority: 30,
+  },
+  {
+    pattern:
+      "\\b(giraffe|tandoori|curry|kebab|indian|thai|chinese|noodle|street food|fish (?:and|&) c\\w*|kitchen|wetherspoons?|inn|arms|tavern|bar|bars)\\b",
+    category: "food/restaurants",
+    matchType: "regex",
+    priority: 31,
+  },
+  {
+    pattern:
+      "\\b(convenience|convenie|village shop|village store|farm shop|centra|carrefour|auchan)\\b",
+    category: "food/groceries",
+    matchType: "regex",
+    priority: 30,
+  },
+  // shopping
+  {
+    pattern:
+      "\\b(barbers?|hairdressers?|hair salon|booksy|foot ?locker|sunglass hut|shoes?|insoles|clarks|designer outlet)\\b",
+    category: "shopping/clothing-personal-care",
+    matchType: "regex",
+    priority: 31,
+  },
+  {
+    pattern:
+      "\\b(aliexpress|temu|etsy|flying ?tiger\\w*|post office|google store|buyitdirect|walletking)\\b",
+    category: "shopping/general",
+    matchType: "regex",
+    priority: 32,
+  },
+  // hobbies and days out
+  {
+    pattern:
+      "\\b(cycles?|cycling|bikes?|bikefit\\w*|bike fit|sigma ?sports|sigmasports|ribble|restrap|spray\\.bike|bikeparts|tradeinn|sportpursuit|go outdoors|boardsandmore|cubestores)\\b",
+    category: "fun/hobbies",
+    matchType: "regex",
+    priority: 31,
+  },
+  {
+    pattern:
+      "\\b(cinemas?|cineworld|odeon|vue|theatre|bowling|festival|funfair|zoo|aquapark|adventure park|museum|the nec|escape room|trampoline)\\b",
+    category: "fun/entertainment",
+    matchType: "regex",
+    priority: 31,
+  },
+  // health and giving
+  {
+    pattern: "\\b(nhsbsa|prescription)\\b",
+    category: "health/medical-pharmacy",
+    matchType: "regex",
+    priority: 28,
+  },
+  {
+    pattern: "\\b(hospice|enthuse)\\b",
+    category: "gifts/gifts-giving",
+    matchType: "regex",
+    priority: 30,
+  },
 ];
 
 /**

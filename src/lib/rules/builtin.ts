@@ -8,6 +8,7 @@ import type { Db } from "@/lib/db/client";
 import { rules } from "@/lib/db/schema";
 import { LOCALE } from "@/lib/locale";
 import { UK_RULES, US_RULES_EXCLUDED_IN_UK } from "./builtin-uk";
+import { loadPersonalRules, resolvePersonalCategory } from "./personal";
 
 export type BuiltinRule = {
   pattern: string;
@@ -291,12 +292,28 @@ function resolveBuiltinTargets(db: Db): Map<string, number> {
   return ids;
 }
 
-export function ensureBuiltinRules(db: Db): void {
+export function ensureBuiltinRules(
+  db: Db,
+  personal: BuiltinRule[] = loadPersonalRules(),
+): void {
   ensureDefaultCategories(db);
   const targets = resolveBuiltinTargets(db);
+  // The built-in table plus the household's own rules (data/my-rules.json).
+  // A personal rule whose category does not exist is skipped, not fatal.
+  const wanted: { r: BuiltinRule; categoryId: number }[] = [];
   for (const r of BUILTIN_RULES) {
     const categoryId = targets.get(r.category);
-    if (categoryId === undefined) continue;
+    if (categoryId !== undefined) wanted.push({ r, categoryId });
+  }
+  for (const r of personal) {
+    const categoryId = resolvePersonalCategory(db, r.category);
+    if (categoryId === undefined)
+      console.warn(
+        `my-rules.json: no category called "${r.category}" (rule "${r.pattern}" skipped)`,
+      );
+    else wanted.push({ r, categoryId });
+  }
+  for (const { r, categoryId } of wanted) {
     const exists = db
       .select()
       .from(rules)
@@ -342,25 +359,18 @@ export function ensureBuiltinRules(db: Db): void {
       .run();
   }
 
-  // Prune builtin rules that are no longer in BUILTIN_RULES, or whose target
-  // leaf the user has since deleted.
-  const currentKeys = new Set<string>();
-  for (const r of BUILTIN_RULES) {
-    const categoryId = targets.get(r.category);
-    if (categoryId === undefined) continue;
-    currentKeys.add(`${r.pattern}${categoryId}`);
-  }
-
-  const allBuiltin = db
+  // Prune builtin rules that are no longer wanted: dropped from the table or
+  // from my-rules.json, or whose target leaf the user has since deleted.
+  const currentKeys = new Set(
+    wanted.map(({ r, categoryId }) => `${r.pattern}${categoryId}`),
+  );
+  for (const builtinRule of db
     .select()
     .from(rules)
     .where(eq(rules.builtin, true))
-    .all();
-
-  for (const builtinRule of allBuiltin) {
-    const key = `${builtinRule.pattern}${builtinRule.categoryId}`;
-    if (!currentKeys.has(key)) {
+    .all()) {
+    const key = `${builtinRule.pattern}${builtinRule.categoryId}`;
+    if (!currentKeys.has(key))
       db.delete(rules).where(eq(rules.id, builtinRule.id)).run();
-    }
   }
 }

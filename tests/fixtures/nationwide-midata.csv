@@ -1,0 +1,9 @@
+﻿"Account Number:","****54321"
+
+"Date","Type","Merchant/Description","Debit/Credit","Balance"
+"02/03/2026","Contactless Payment GREENLEAF GROCER","GREENLEAF GROCER TOWNVILLE GB GOOGLE ****","-£12.40","£1987.60"
+"03/03/2026","Monthly Account Fee","Withdrawal 03 March 2026","-£18.00","£1969.60"
+"05/03/2026","Bank credit ACME WIDGETS LTD","Bank credit ACME WIDGETS LTD","£2500.00","£4469.60"
+"07/03/2026","Visa purchase HOTEL SOL","HOTEL SOL VALENCIA ES 55.000000 EUR at 1.17000","-£47.01","£4422.59"
+
+"Arranged Overdraft Limit","07/03/2026","£0.00"

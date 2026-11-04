@@ -3,6 +3,19 @@ import { parseAmountToCents } from "@/lib/money";
 import { cleanMerchant } from "@/lib/normalize/merchant";
 import type { BankProfile, ParsedRow, RawRow, RowError } from "./types";
 
+/**
+ * The description, or the transaction type when the description names no one:
+ * Nationwide puts the payee of a transfer or credit in its Type column ("Bank
+ * credit ACME LTD") with only a reference in the description, and a fee or
+ * cash withdrawal is just "Withdrawal 31 October 2026" either way.
+ */
+export function describe(description: string, type: string): string {
+  if (!type) return description;
+  const namesNoOne =
+    !/[a-z]{2}/i.test(description) || /^withdrawal\b/i.test(description);
+  return namesNoOne ? type : description;
+}
+
 type Result = { ok: true; row: ParsedRow } | { ok: false; error: RowError };
 
 export function normalizeRow(
@@ -36,10 +49,10 @@ export function normalizeRow(
 
   // NatWest prefixes text cells with an apostrophe to stop Excel
   // reformatting them ("'TESCO STORES 1234").
-  const rawDescription = (row[profile.descCol] ?? "")
-    .trim()
-    .replace(/^'+/, "")
-    .trim();
+  const rawDescription = describe(
+    (row[profile.descCol] ?? "").trim().replace(/^'+/, "").trim(),
+    profile.typeCol ? (row[profile.typeCol] ?? "").trim() : "",
+  );
   if (!rawDescription) return fail("Missing description");
   const balanceRaw = profile.balanceCol ? row[profile.balanceCol] : undefined;
   const balanceCents = balanceRaw ? parseAmountToCents(balanceRaw) : null;

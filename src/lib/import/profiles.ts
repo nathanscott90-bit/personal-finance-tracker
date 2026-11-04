@@ -98,6 +98,22 @@ export const UK_PROFILES: BankProfile[] = [
       dateFormat: "DMY",
     },
   ),
+  // Nationwide's midata download: a year of history (up to a month ago) with
+  // every digit in the descriptions replaced by "*", one signed amount column,
+  // and the payee of a transfer or credit in the Type column.
+  defineProfile(
+    "Nationwide (midata)",
+    ["Date", "Type", "Merchant/Description", "Debit/Credit", "Balance"],
+    {
+      dateCol: "Date",
+      descCol: "Merchant/Description",
+      typeCol: "Type",
+      amountCol: "Debit/Credit",
+      balanceCol: "Balance",
+      signConvention: "outflow_negative",
+      dateFormat: "DMY",
+    },
+  ),
 ];
 
 /** The formats the app recognises by themselves: UK banks. Any other bank is taught once through the mapping wizard. */

@@ -73,6 +73,13 @@ download again.
 - If NatWest or Nationwide ever stops offering CSV/OFX downloads, this route
   stops too.
 
+## Nationwide: which download
+
+- **Weekly:** Download transactions (CSV). Full payee names.
+- **First time, for history:** midata (CSV) gives up to a year. It hides the
+  digits in descriptions, but imports and categorises the same way. Both files
+  for one account land in the same app account.
+
 ## If a file does not import
 
 - "Could not read any transactions": a new layout. Import it once on the
