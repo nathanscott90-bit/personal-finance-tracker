@@ -253,9 +253,38 @@ function titleCase(s: string): string {
     .join(" ");
 }
 
+/**
+ * UK statement wrappers, peeled before anything else so the same shop gets
+ * the same name every month (bills are detected by name):
+ * - NatWest card: "1234 02MAR26 , GREENLEAF GROCER , TOWNVILLE GB" -> "GREENLEAF GROCER"
+ * - NatWest transfer: "J BLOGGS , REF , VIA MOBILE - PYMT , FP …" -> "J BLOGGS"
+ * - First direct debit: "ACME INSURE , INITIAL PAYMENT" -> "ACME INSURE"
+ * - Nationwide card: "… TOWNVILLE GB GOOGLE 1234", "… ES 55.000000 EUR at
+ *   1.17000 GOOGLE ****" -> the shop and town
+ */
+export function peelUkStatement(s: string): string {
+  const pos = /^\d{4} \d{2}[A-Z]{3}\d{2}(?: [A-Z])? , ([^,]+?) ,/i.exec(s);
+  if (pos) return pos[1].trim();
+  if (/ , (?:VIA MOBILE|VIA ONLINE|FP \d{2}\/)/i.test(s))
+    return s.split(/\s*,\s*/)[0].trim();
+  let t = s.replace(/\s*,\s*INITIAL PAYMENT$/i, "");
+  const card = /(?:\s+[\d*]{4})$/;
+  t = t.replace(/\s+GOOGLE(?:\s+[\d*]{4})?$/i, "").replace(card, "");
+  t = t.replace(/\s+[A-Z]{2}\s+[\d*]+\.[\d*]+\s+[A-Z]{3}\s+at\s+[\d*.]+$/i, "");
+  t = t
+    .replace(card, "")
+    .replace(/\s+(?:GB|UK)$/i, "")
+    // Nationwide's transaction type, when it stands in for the payee.
+    .replace(
+      /^(?:bank credit|transfer (?:to|from)|payment to|visa purchase|contactless payment)\s+/i,
+      "",
+    );
+  return t.trim() || s;
+}
+
 export function cleanMerchant(raw: string, opts: CleanOptions = {}): string {
   const cities = opts.cities ?? EMPTY_CITIES;
-  let s = raw.replace(/\s+/g, " ").trim();
+  let s = peelUkStatement(raw.replace(/\s+/g, " ").trim());
   if (s === "") return "Unknown";
 
   for (const [re, name] of SPECIAL) if (re.test(s)) return name;

@@ -19,7 +19,7 @@ export type DefaultParent = {
  * matters because the sweep sits on hot paths (every transaction listing,
  * every transfer pass).
  */
-export const CATEGORIES_SEED_VERSION = 4;
+export const CATEGORIES_SEED_VERSION = 5;
 export const CATEGORIES_SEED_VERSION_KEY = "categories_seed_version";
 
 /** "Card payments" -> "card-payments" */
@@ -78,6 +78,10 @@ export const DEFAULT_CATEGORIES: DefaultParent[] = [
   ]),
   p("health", "Health", "expense", "heart-pulse", false, [
     { name: "Medical & pharmacy" },
+  ]),
+  p("family", "Family", "expense", "baby", false, [
+    { name: "Childcare & kids" },
+    { name: "Pets" },
   ]),
   p("shopping", "Shopping", "expense", "shopping-bag", false, [
     { name: "Clothing & personal care" },

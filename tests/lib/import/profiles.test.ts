@@ -32,6 +32,7 @@ describe("built-in formats", () => {
       "Nationwide (current account)",
       "Nationwide (current account, older export)",
       "Nationwide (credit card)",
+      "Nationwide (midata)",
     ]);
   });
   it("leave a US bank's file to the mapping wizard", () => {

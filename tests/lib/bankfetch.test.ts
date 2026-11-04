@@ -68,7 +68,7 @@ describe("identifyStatement", () => {
   it("reads Nationwide's account line, current and credit card", () => {
     expect(
       identifyStatement(fixture("nationwide-current.csv").toString("latin1")),
-    ).toMatchObject({ key: "nationwide:flexplus ****12345" });
+    ).toMatchObject({ key: "nationwide:12345" });
     expect(
       identifyStatement(fixture("nationwide-credit.csv").toString("latin1")),
     ).toMatchObject({ institution: "Nationwide" });

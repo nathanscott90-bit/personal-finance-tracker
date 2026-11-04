@@ -36,12 +36,17 @@ export function identifyStatement(
   const first = lines.find((l) => l.trim() !== "") ?? "";
   const c0 = cells(first);
 
-  if (/^account name:?$/i.test(c0[0] ?? "") && c0[1])
+  // Nationwide: "Account Name:","FlexPlus ****12345" on a statement
+  // download, "Account Number:","****12345" on midata. Keyed by the visible
+  // digits so both files of one account map to the same app account.
+  if (/^account (name|number):?$/i.test(c0[0] ?? "") && c0[1]) {
+    const digits = /\*+(\d{3,})\s*$/.exec(c0[1])?.[1];
     return {
-      key: `nationwide:${c0[1].toLowerCase()}`,
-      label: c0[1],
+      key: `nationwide:${digits ?? c0[1].toLowerCase()}`,
+      label: /^account number/i.test(c0[0]) ? `Account ${c0[1]}` : c0[1],
       institution: "Nationwide",
     };
+  }
 
   const headerAt = lines.findIndex((l) => /account number/i.test(l));
   if (headerAt >= 0) {

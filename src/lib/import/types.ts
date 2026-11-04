@@ -15,6 +15,12 @@ export type BankProfile = {
   debitCol?: string | null;
   creditCol?: string | null;
   balanceCol?: string | null;
+  /**
+   * A transaction-type column ("Contactless Payment", "Bank credit NAME")
+   * used for the description when the description itself carries no name:
+   * only a reference, or a bare "Withdrawal 31 October 2026".
+   */
+  typeCol?: string | null;
   dateFormat: DateFormat;
   signConvention: SignConvention;
   skipRows: number;

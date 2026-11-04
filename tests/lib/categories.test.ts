@@ -26,13 +26,13 @@ function bumpSeedVersion(db: ReturnType<typeof openDb>) {
 }
 
 describe("ensureDefaultCategories", () => {
-  it("seeds 14 parents and 30 leaves, idempotently", () => {
+  it("seeds 15 parents and 32 leaves, idempotently", () => {
     const db = openDb(":memory:");
     ensureDefaultCategories(db);
     ensureDefaultCategories(db);
     const all = db.select().from(categories).all();
-    expect(all.filter((c) => c.parentId === null)).toHaveLength(14);
-    expect(all.filter((c) => c.parentId !== null)).toHaveLength(30);
+    expect(all.filter((c) => c.parentId === null)).toHaveLength(15);
+    expect(all.filter((c) => c.parentId !== null)).toHaveLength(32);
     expect(findCategoryId(db, "Groceries")).toBeTypeOf("number");
     expect(findCategoryId(db, "Nope")).toBeUndefined();
   });
@@ -125,7 +125,7 @@ describe("ensureDefaultCategories", () => {
     ensureDefaultCategories(db);
     const all = db.select().from(categories).all();
     expect(all.filter((c) => c.seedKey === null)).toHaveLength(0);
-    expect(all.filter((c) => c.parentId !== null)).toHaveLength(30);
+    expect(all.filter((c) => c.parentId !== null)).toHaveLength(32);
   });
 
   it("does not re-seed a deleted default leaf, even across seed version bumps", () => {
@@ -148,7 +148,7 @@ describe("ensureDefaultCategories", () => {
         .from(categories)
         .all()
         .filter((c) => c.parentId !== null),
-    ).toHaveLength(29);
+    ).toHaveLength(31);
 
     // A direct ensureLeaf with the tombstoned key stays out too, but the
     // same name under a different identity is a normal add.
@@ -179,7 +179,7 @@ describe("ensureDefaultCategories", () => {
       false,
     );
     expect(findCategoryId(db, "Medical & pharmacy")).toBeUndefined();
-    expect(all.filter((c) => c.parentId === null)).toHaveLength(13);
+    expect(all.filter((c) => c.parentId === null)).toHaveLength(14);
   });
 
   it("skips tombstoned keys when seeding an empty database", () => {
@@ -189,7 +189,7 @@ describe("ensureDefaultCategories", () => {
     const all = db.select().from(categories).all();
     expect(findCategoryId(db, "Groceries")).toBeUndefined();
     expect(findCategoryId(db, "Medical & pharmacy")).toBeUndefined();
-    expect(all.filter((c) => c.parentId === null)).toHaveLength(13);
-    expect(all.filter((c) => c.parentId !== null)).toHaveLength(28);
+    expect(all.filter((c) => c.parentId === null)).toHaveLength(14);
+    expect(all.filter((c) => c.parentId !== null)).toHaveLength(30);
   });
 });
