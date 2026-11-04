@@ -1,31 +1,34 @@
 # Finance — UK setup (Windows)
 
-Runs on your PC, for both of you. Your data never leaves it, apart from
-read-only bank access through Enable Banking, the alerts sent to your phones,
-and encrypted backups to a folder you choose.
+Runs on your PC, for both of you. Your data never leaves it, apart from the
+alerts sent to your phones and encrypted backups to a folder you choose. Bank
+data comes from statements you download yourself while logged in to your bank.
 
 ## 1. Install (once, ~5 minutes)
 
 1. Unzip this folder somewhere permanent, e.g. `Documents\Finance`.
 2. Double-click **setup.cmd**. It installs Node.js if needed, builds the
-   app, adds a **Finance** shortcut to the desktop, schedules a daily sync
-   at 07:30 (or as soon as the PC is next on), keeps the PC awake on mains
+   app, adds **Finance** and **Bank download** shortcuts to the desktop, schedules a daily job
+   (alerts and backup) at 07:30 (or as soon as the PC is next on), keeps the PC awake on mains
    power and installs Tailscale.
 3. Sign in to Tailscale when it opens, then run **setup.cmd** once more. It
    needs your tailnet's name to finish phone access.
 
-## 2. Connect your banks (once, then every few months)
+## 2. Bring in your bank data (weekly, about two minutes)
 
-1. Open **Finance** → **Settings** → **Bank connection** and follow the four
-   steps shown there (free Enable Banking account, register the app, link
-   NatWest and Nationwide, paste the ID and key).
-2. Click **Connect a bank**, choose NatWest, approve in the bank's page. You
-   land on a page that may say it can't be reached: copy its address, paste
-   it into the app, **Finish**. Repeat for Nationwide.
+Double-click **Bank download** on the desktop.
 
-Accounts are created and matched automatically. Banks make you re-approve
-access every 90–180 days; you'll get a phone alert when it's due — repeat
-step 2 for that bank.
+1. Chrome opens at NatWest and Nationwide. Log in as you normally do,
+   including the approval on your phone. The app never sees or stores your
+   login.
+2. For each account: **Download / Export transactions** → **CSV** → pick the
+   dates → download. Each file is imported as it arrives.
+3. The first time for each account you are asked which account in the app it
+   is (or to add it as a new one). After that it remembers.
+4. Press **Enter** in the black window when you have finished.
+
+Downloading dates you already have is safe: repeats are skipped. You get a
+phone alert if it has been a week. Details: docs/BANK-DOWNLOAD.md.
 
 ## 3. Phone alerts (once)
 
@@ -84,11 +87,6 @@ your money, read-only. Off until you choose. See docs/CLAUDE-CONNECTOR.md.
   broadband contracts), and **spending vs usual**.
 
 All the defaults can be changed in Settings at the foot of that page.
-
-## Without the bank connection
-
-Download CSVs from NatWest and Nationwide online banking and drop them on the
-**Import** page. Both banks' formats are recognised automatically.
 
 ## Where things are
 

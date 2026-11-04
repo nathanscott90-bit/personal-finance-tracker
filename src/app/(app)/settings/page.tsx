@@ -1,5 +1,6 @@
 import { listAccounts } from "@/actions/accounts";
 import { getOffsiteAction } from "@/actions/backup";
+import { getBankDownloadAction } from "@/actions/bankdownload";
 import { getClaudeAction } from "@/actions/claude";
 import { getBankConnection } from "@/actions/enablebanking";
 import {
@@ -12,6 +13,7 @@ import { getNotifySettings } from "@/actions/notify";
 import { getPaydayAction, getSettingsPage } from "@/actions/settings";
 import { getConnectionAction } from "@/actions/simplefin";
 import { BankConnectionCard } from "@/components/finance/bank/BankConnectionCard";
+import { BankDownloadCard } from "@/components/finance/bank/BankDownloadCard";
 import { NotifyCard } from "@/components/finance/bank/NotifyCard";
 import { PaydayForm } from "@/components/finance/budget/PaydayForm";
 import { CategoryManager } from "@/components/finance/CategoryManager";
@@ -47,6 +49,7 @@ export default async function SettingsPage() {
     name: a.name,
   }));
   const bank = await getBankConnection();
+  const bankDownload = await getBankDownloadAction();
   const notify = await getNotifySettings();
   const [people, you, activity, offsite, claude] = await Promise.all([
     getPeopleAction(),
@@ -61,18 +64,28 @@ export default async function SettingsPage() {
     <>
       <h1 className="mb-6 text-title font-semibold">Settings</h1>
       <div className="grid gap-6">
-        <BankConnectionCard
-          view={bank}
-          lastSyncLabel={
-            bank.lastSyncAt ? relativeSince(bank.lastSyncAt, now) : null
+        <BankDownloadCard
+          view={bankDownload}
+          lastLabel={
+            bankDownload.last ? relativeSince(bankDownload.last.at, now) : null
           }
-          validLabels={Object.fromEntries(
-            bank.banks.map((b) => [
-              b.bank,
-              b.validUntil ? stampDate(b.validUntil) : "unknown",
-            ]),
-          )}
         />
+        {/* The automatic Enable Banking link does not cover UK banks; it only
+            shows for anyone who already set it up. */}
+        {bank.configured && (
+          <BankConnectionCard
+            view={bank}
+            lastSyncLabel={
+              bank.lastSyncAt ? relativeSince(bank.lastSyncAt, now) : null
+            }
+            validLabels={Object.fromEntries(
+              bank.banks.map((b) => [
+                b.bank,
+                b.validUntil ? stampDate(b.validUntil) : "unknown",
+              ]),
+            )}
+          />
+        )}
         <NotifyCard
           topic={notify.topic}
           server={notify.server}

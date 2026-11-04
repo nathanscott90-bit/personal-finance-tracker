@@ -11,6 +11,11 @@ export type Notice = {
   priority: "default" | "high";
 };
 
+/** Bills are not called "missing" when the data is older than this. */
+const STALE_AFTER_DAYS = 3;
+/** Weekly reminder to download once the data is this old. */
+const NUDGE_AFTER_DAYS = 7;
+
 export type NotifySettings = {
   /** Monthly standing order into the bills account; 0 = none. */
   standingOrderCents: number;
@@ -45,6 +50,10 @@ export function decideNotices(i: {
   expiring: { bank: string; validUntil: string; expired: boolean }[];
   syncError: string | null;
   lastGoodSyncAt: string | null;
+  /** Days since the app last got bank data; null when it has none yet. */
+  dataAgeDays?: number | null;
+  /** True when data arrives by manual download rather than automatic sync. */
+  manualDownloads?: boolean;
 }): Notice[] {
   const out: Notice[] = [];
   const { funding: f, today } = i;
@@ -78,7 +87,11 @@ export function decideNotices(i: {
         message: `Bills due before payday would take it to ${formatCents(plan.beforePayday.lowestCents)} on ${day(plan.beforePayday.lowestDate)}. Top up before then.`,
         priority: "high",
       });
-    for (const e of plan.beforePayday.events.filter((x) => x.overdue))
+    // A payment that has not appeared may simply not have been downloaded yet.
+    const dataIsStale = (i.dataAgeDays ?? 0) > STALE_AFTER_DAYS;
+    for (const e of plan.beforePayday.events.filter(
+      (x) => x.overdue && !dataIsStale,
+    ))
       out.push({
         key: `missing:${e.name}:${plan.payday}`,
         title: `${e.name} hasn't been taken`,
@@ -105,6 +118,18 @@ export function decideNotices(i: {
         ? "Open the app → Settings → Bank connection → Reconnect. Takes a minute."
         : `Access ends ${day(e.validUntil.slice(0, 10))}. Open the app → Settings → Bank connection → Reconnect.`,
       priority: e.expired ? "high" : "default",
+    });
+
+  if (
+    i.manualDownloads &&
+    i.dataAgeDays != null &&
+    i.dataAgeDays >= NUDGE_AFTER_DAYS
+  )
+    out.push({
+      key: `download:${Math.floor(Date.parse(`${today}T00:00:00Z`) / (7 * 86_400_000))}`,
+      title: "Time for a bank download",
+      message: `Your bank data is ${i.dataAgeDays} days old. Run Bank download on the PC (about two minutes).`,
+      priority: "default",
     });
 
   if (i.syncError) {

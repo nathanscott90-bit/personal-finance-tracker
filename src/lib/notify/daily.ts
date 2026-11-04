@@ -1,3 +1,4 @@
+import { dataAgeDays } from "@/lib/bankfetch/freshness";
 import { localDay } from "@/lib/dates";
 import type { Db } from "@/lib/db/client";
 import type { FetchFn } from "@/lib/enablebanking/client";
@@ -43,6 +44,8 @@ export async function runDaily(
     expiring: sync?.expiring ?? [],
     syncError: sync?.ok === false ? sync.error : null,
     lastGoodSyncAt: status.lastSyncAt,
+    dataAgeDays: dataAgeDays(db, today),
+    manualDownloads: getSessions(db).length === 0,
   }).concat(monthlyNotices(check, getSavingsSettings(db).renewalLeadDays));
   const { sent, failed } = await deliver(db, notices, deps.send);
   return { sync, notices, sent, failed };

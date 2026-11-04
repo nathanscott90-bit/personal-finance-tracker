@@ -112,6 +112,52 @@ describe("decideNotices", () => {
   });
 });
 
+describe("decideNotices with manual bank downloads", () => {
+  const input = (today: string, over: object = {}) => ({
+    ...base,
+    today,
+    funding: page(today, 500000),
+    settings: { standingOrderCents: 0, reminderDays: 2 },
+    ...over,
+  });
+
+  it("nudges weekly once the data is a week old, and only then", () => {
+    const stale = decideNotices(
+      input("2026-10-10", { manualDownloads: true, dataAgeDays: 9 }),
+    );
+    expect(stale.map((n) => n.title)).toEqual(["Time for a bank download"]);
+    expect(stale[0].message).toContain("9 days old");
+    // Same week, same key: never sent twice.
+    const again = decideNotices(
+      input("2026-10-11", { manualDownloads: true, dataAgeDays: 10 }),
+    );
+    expect(again[0].key).toBe(stale[0].key);
+    expect(
+      decideNotices(
+        input("2026-10-10", { manualDownloads: true, dataAgeDays: 3 }),
+      ),
+    ).toEqual([]);
+    // No data yet (new install) or automatic sync: no nudge.
+    expect(
+      decideNotices(
+        input("2026-10-10", { manualDownloads: true, dataAgeDays: null }),
+      ),
+    ).toEqual([]);
+    expect(
+      decideNotices(
+        input("2026-10-10", { manualDownloads: false, dataAgeDays: 20 }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("does not call a bill missing when the data is stale", () => {
+    const fresh = decideNotices(input("2026-11-03", { dataAgeDays: 1 }));
+    expect(fresh.some((n) => n.key.startsWith("missing:"))).toBe(true);
+    const stale = decideNotices(input("2026-11-03", { dataAgeDays: 5 }));
+    expect(stale.some((n) => n.key.startsWith("missing:"))).toBe(false);
+  });
+});
+
 describe("billIncreases", () => {
   it("flags a recent rise over 10%", () =>
     expect(

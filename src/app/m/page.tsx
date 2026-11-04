@@ -92,7 +92,7 @@ export default function PhonePage() {
       )}
       {!plan && s.funding.missing && (
         <section className={`${card} text-caption text-ink-2`}>
-          Finish setting up on the PC: Settings → Bank connection and Payday.
+          Finish setting up on the PC: Settings → Bank download and Payday.
         </section>
       )}
 

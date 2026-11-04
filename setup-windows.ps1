@@ -39,6 +39,11 @@ $lnk.WorkingDirectory = $PSScriptRoot
 $lnk.WindowStyle = 7
 $lnk.IconLocation = "$env:SystemRoot\System32\imageres.dll,99"
 $lnk.Save()
+# Opens Chrome at your banks and imports the statements you download.
+$bank = $shell.CreateShortcut("$desktop\Bank download.lnk")
+$bank.TargetPath = "$PSScriptRoot\bank.cmd"
+$bank.WorkingDirectory = $PSScriptRoot
+$bank.Save()
 
 Write-Host "Scheduling the daily bank sync..."
 $daily = "$PSScriptRoot\daily.cmd"
@@ -145,7 +150,7 @@ try { Start-ScheduledTask -TaskName "Finance server" } catch {}
 
 Write-Host ""
 Write-Host "Done. Open 'Finance' from your desktop, go to Settings, and follow" -ForegroundColor Green
-Write-Host "'Bank connection', 'Phone alerts', 'People' and 'Off-PC backup'." -ForegroundColor Green
+Write-Host "'Phone alerts', 'People' and 'Off-PC backup'. To bring in your bank data, use the 'Bank download' shortcut." -ForegroundColor Green
 if ($hostName) {
   Write-Host "Phones and laptops: see PHONE-LINK.txt ($base)." -ForegroundColor Green
 } else {
